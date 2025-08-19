@@ -1,0 +1,32 @@
+2025-08-01 15:38:45,614 - INFO - Starting Google job scrape...
+2025-08-01 15:39:00,613 - INFO - 🔍 Searching for jobs with query: Software Engineer
+2025-08-01 15:39:01,050 - INFO - ✅ 'Software Engineer' Page 1: Parsed 20 jobs.
+2025-08-01 15:39:05,142 - INFO - ✅ 'Software Engineer' Page 2: Parsed 20 jobs.
+2025-08-01 15:39:06,702 - INFO - ✅ 'Software Engineer' Page 3: Parsed 20 jobs.
+2025-08-01 15:39:08,876 - INFO - ✅ 'Software Engineer' Page 4: Parsed 20 jobs.
+2025-08-01 15:39:10,624 - INFO - ✅ 'Software Engineer' Page 5: Parsed 20 jobs.
+2025-08-01 15:39:13,686 - INFO - ✅ 'Software Engineer' Page 6: Parsed 20 jobs.
+2025-08-01 15:39:19,019 - INFO - ✅ 'Software Engineer' Page 7: Parsed 20 jobs.
+2025-08-01 15:39:22,386 - INFO - ✅ 'Software Engineer' Page 8: Parsed 20 jobs.
+2025-08-01 15:39:26,537 - INFO - ✅ 'Software Engineer' Page 9: Parsed 20 jobs.
+2025-08-01 15:39:28,847 - INFO - ✅ 'Software Engineer' Page 10: Parsed 20 jobs.
+2025-08-01 15:39:32,677 - INFO - ✅ 'Software Engineer' Page 11: Parsed 20 jobs.
+2025-08-01 15:39:34,982 - INFO - ✅ 'Software Engineer' Page 12: Parsed 20 jobs.
+2025-08-01 15:39:40,306 - INFO - ✅ 'Software Engineer' Page 13: Parsed 20 jobs.
+2025-08-01 15:39:42,970 - INFO - ✅ 'Software Engineer' Page 14: Parsed 20 jobs.
+2025-08-01 15:39:47,886 - INFO - ✅ 'Software Engineer' Page 15: Parsed 20 jobs.
+2025-08-01 15:39:50,646 - INFO - ✅ 'Software Engineer' Page 16: Parsed 20 jobs.
+2025-08-01 15:39:55,800 - INFO - ✅ 'Software Engineer' Page 17: Parsed 20 jobs.
+2025-08-01 15:39:59,862 - INFO - ✅ 'Software Engineer' Page 18: Parsed 20 jobs.
+2025-08-01 15:40:03,936 - INFO - ✅ 'Software Engineer' Page 19: Parsed 1 jobs.
+2025-08-01 15:40:08,869 - WARNING - ⚠️ No job entries for 'Software Engineer' on page 20
+2025-08-01 15:40:09,265 - WARNING - ⚠️ No job entries for 'Software Engineer' on page 21
+2025-08-01 15:40:09,571 - WARNING - ⚠️ No job entries for 'Software Engineer' on page 22
+2025-08-01 15:40:09,571 - WARNING - ⚠️ Stopping 'Software Engineer': 3 empty pages.
+2025-08-01 15:40:09,571 - INFO - 🔍 Searching for jobs with query: ai-spotlight
+2025-08-01 15:40:09,939 - INFO - ✅ 'ai-spotlight' Page 1: Parsed 1 jobs.
+2025-08-01 15:40:11,793 - WARNING - ⚠️ No job entries for 'ai-spotlight' on page 2
+2025-08-01 15:40:12,237 - WARNING - ⚠️ No job entries for 'ai-spotlight' on page 3
+2025-08-01 15:40:12,645 - WARNING - ⚠️ No job entries for 'ai-spotlight' on page 4
+2025-08-01 15:40:12,645 - WARNING - ⚠️ Stopping 'ai-spotlight': 3 empty pages.
+2025-08-01 15:40:12,645 - INFO - 🎉 Total Google jobs found: 362
