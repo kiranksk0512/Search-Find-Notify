@@ -1,12 +1,16 @@
+import random
 import aiohttp
 import asyncio
 from core.logger import get_company_logger
 import json
+from typing import Optional, Dict, Any
 
 
 
 MAX_RETRIES = 3
 RETRY_DELAY = 5  # seconds
+BASE_TIMEOUT = 10  # seconds
+MAX_BACKOFF = 20   # seconds
 
 # Used for Apple, content type is application/json , reusable for JSON APIs
 async def post_json(url, payload, headers):
@@ -82,4 +86,79 @@ async def get_json(url, headers=None, params=None, cookies=None):
     return None
 
 
+def _retryable_status(status: Optional[int]) -> bool:
+    # Retry on 429 and 5xx
+    return status == 429 or (status is not None and 500 <= status < 600)
 
+
+async def _read_json_lenient_resp(resp: aiohttp.ClientResponse, logger=None) -> Optional[Dict[str, Any]]:
+    # Try normal JSON first; fall back to text->json if content-type is off
+    try:
+        return await resp.json()
+    except Exception:
+        try:
+            txt = await resp.text()
+            return json.loads(txt)
+        except Exception:
+            if logger:
+                snippet = (txt[:300] + "…") if 'txt' in locals() and txt else "<no body>"
+                logger.warning(f"⚠️ Failed to parse JSON; body snippet: {snippet}")
+            return None
+
+# Used for Microsoft    
+async def get_json_resilient(
+    url: str,
+    *,
+    headers: Optional[Dict[str, str]] = None,
+    params: Optional[Dict[str, Any]] = None,
+    cookies: Optional[Dict[str, str]] = None,
+    max_retries: int = 3,
+    base_timeout: int = 10,
+    max_backoff: int = 20,
+    logger=None,
+) -> Optional[Dict[str, Any]]:
+    """
+    Keyword-only parameters to avoid accidental (headers, params) swap.
+    - Retries on 429/5xx and timeouts, honoring Retry-After when present.
+    - Exponential backoff + jitter.
+    - Lenient JSON parsing (handles text/json mismatches).
+    """
+    attempt = 0
+    async with aiohttp.ClientSession(cookies=cookies) as session:
+        while attempt < max_retries:
+            attempt += 1
+            delay = None
+            try:
+                timeout = aiohttp.ClientTimeout(total=base_timeout)
+                async with session.get(url, headers=headers, params=params, timeout=timeout) as resp:
+                    if resp.status == 200:
+                        return await _read_json_lenient_resp(resp, logger=logger)
+
+                    body_snip = (await resp.text())[:300]
+                    if logger:
+                        logger.warning(f"⚠️ GET {url} -> {resp.status}; params={params} body: {body_snip}")
+
+                    if not _retryable_status(resp.status):
+                        return None
+
+                    # Retry-After support (seconds)
+                    ra = resp.headers.get("Retry-After")
+                    if ra:
+                        try:
+                            delay = float(ra)
+                        except Exception:
+                            delay = None
+                    if delay is None:
+                        delay = min(max_backoff, 2 ** attempt + random.random())
+            except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+                if logger:
+                    logger.warning(f"⚠️ GET attempt {attempt} failed: {e}")
+                delay = min(max_backoff, 2 ** attempt + random.random())
+
+            if delay is None:
+                delay = 1.0
+            await asyncio.sleep(delay)
+
+    if logger:
+        logger.error(f"❌ All {max_retries} GET attempts failed for {url} with params={params}")
+    return None

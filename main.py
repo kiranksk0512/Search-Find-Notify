@@ -24,6 +24,9 @@ from core.types import ScrapeSummary
 # Per-company on/off switches (still honored in aggregated digest)
 from config import COMPANY_EMAIL_NOTIFICATIONS
 
+from core.stability import load_miss_counts, save_miss_counts, utcnow_str, parse_iso_guess
+from config import BASE_DATA_PATH, MISS_THRESHOLD, REOPEN_GRACE_DAYS, BIG_DROP_REFETCH_RATIO, MAX_REFETCHES
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Job Scraper CLI")
