@@ -1,0 +1,13 @@
+Amazon :
+--------
+
+-> When we retrieve amazon jobs through sort by recent, it is sorted by the job created date in ascending order not by job updated date.
+
+You can observe this via amazon_jobs.json file which the scraper retrieves from amazon's career website.
+
+
+
+
+
+
+

@@ -20,7 +20,7 @@ async def post_json(url, payload, headers):
                     else:
                         logger.warning(f"⚠️ Status {response.status} from {url}")
         except Exception as e:
-            logger.warning(f"⚠️ Attempt {attempt} failed: {e}")
+            logger.error(f"⚠️ Attempt {attempt} failed: {e}")
 
         await asyncio.sleep(RETRY_DELAY)
 
@@ -54,8 +54,8 @@ async def post_form(url, payload, headers, cookies=None, parse_json=True):
                         logger.warning(f"⚠️ Non-200 response: {response.status} - {await response.text()}")
                         # logger.warning(f"⚠️ Status {response.status} from {url}")
         except Exception as e:
-            logger.warning(f"response: {await response.text()}")
-            logger.warning(f"⚠️ Attempt {attempt} failed: {e}")
+            logger.error(f"response: {await response.text()}")
+            logger.error(f"⚠️ Attempt {attempt} failed: {e}")
 
         await asyncio.sleep(RETRY_DELAY)
 
@@ -74,7 +74,7 @@ async def get_json(url, headers=None, params=None, cookies=None):
                     else:
                         logger.warning(f"⚠️ Status {response.status} from {url}")
         except Exception as e:
-            logger.warning(f"⚠️ Attempt {attempt} failed: {e}")
+            logger.error(f"⚠️ Attempt {attempt} failed: {e}")
 
         await asyncio.sleep(RETRY_DELAY)
 

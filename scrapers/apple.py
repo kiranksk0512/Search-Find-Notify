@@ -4,7 +4,9 @@ from core.fetcher import post_json
 from models.apple_job import AppleJob
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from core.logger import get_company_logger
 
+logger = get_company_logger()
 API_URL = "https://jobs.apple.com/api/v1/search"
 
 USER_AGENTS = [
@@ -44,6 +46,13 @@ def convert_to_edt(utc_string):
         return dt_edt.strftime("%b %d, %Y %I:%M %p %Z")
     except Exception:
         return "Unknown"
+    
+def apple_job_url(job_id: str) -> str:
+    # PIPE-* postings use only the numeric part
+    if job_id.startswith("PIPE-"):
+        return f"https://jobs.apple.com/en-us/details/{job_id.split('-', 1)[1]}"
+    # all other IDs should use the full ID, including the dash
+    return f"https://jobs.apple.com/en-us/details/{job_id}"
 
 async def get_jobs():
     job_list = []
@@ -51,6 +60,7 @@ async def get_jobs():
 
     # Optional: add random jitter before starting, so different runs don't look identical
     await asyncio.sleep(random.uniform(0, 20))
+    logger.info("Entered get_jobs()")
 
     while True:
         payload = build_payload(page)
@@ -63,7 +73,7 @@ async def get_jobs():
         results = data.get("res", {}).get("searchResults", [])
         if not results:
             break
-
+        NoOfJobsInAPage = 0
         for job in results:
             job_id = job.get("id")
             title = job.get("postingTitle", "Unknown")
@@ -71,7 +81,7 @@ async def get_jobs():
             location = job.get("locations", [{}])[0].get("countryName", "Unknown")
             post_gmt = job.get("postDateInGMT", "Unknown")
             date_posted = convert_to_edt(post_gmt)
-            url = f"https://jobs.apple.com/en-us/details/{job_id.split('-')[-1]}"
+            url = apple_job_url(job_id)
 
             job_obj = AppleJob(
                 job_id=job_id,
@@ -81,12 +91,14 @@ async def get_jobs():
                 team=team,
                 location=location
             )
-
+            NoOfJobsInAPage += 1
             job_list.append(job_obj)
-
+        logger.info(f"Found {NoOfJobsInAPage} jobs in Page : {page}")
+        logger.info(f"Page :{page} completed")
         page += 1
 
         # Add random delay between pages
         await asyncio.sleep(random.uniform(1, 5))
-
+        logger.info(f"Exiting get_jobs()")
+    logger.info(f"🎉 Found : {len(job_list)} jobs")
     return job_list

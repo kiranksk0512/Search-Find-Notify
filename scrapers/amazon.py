@@ -153,9 +153,9 @@ async def get_jobs():
                 all_jobs.append(job_obj)
 
             start += size
-
+            logger.info(f"Till now retrieved {start} Jobs.")
             # Add random delay between pages
             await asyncio.sleep(random.uniform(1, 5))
-
+        logger.info(f"🔍 Completed scraper for {category_name} category in Amazon...")
     logger.info(f"Scraped {len(all_jobs)} Amazon jobs.")
     return all_jobs
