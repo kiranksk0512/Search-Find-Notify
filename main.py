@@ -24,8 +24,15 @@ from core.types import ScrapeSummary
 # Per-company on/off switches (still honored in aggregated digest)
 from config import COMPANY_EMAIL_NOTIFICATIONS
 
-from core.stability import load_miss_counts, save_miss_counts, utcnow_str, parse_iso_guess
-from config import BASE_DATA_PATH, MISS_THRESHOLD, REOPEN_GRACE_DAYS, BIG_DROP_REFETCH_RATIO, MAX_REFETCHES
+from config import (
+    BASE_DATA_PATH,
+    STABILITY_ENABLED,
+    MISS_THRESHOLD,
+    REOPEN_GRACE_DAYS,
+    BIG_DROP_REFETCH_RATIO,
+    MAX_REFETCHES,
+)
+from core.stability import confirm_big_drop, apply_stability
 
 
 def parse_args():
@@ -52,21 +59,47 @@ async def run_scraper(company_name, scraper_func, force_version=False) -> Scrape
     try:
         # 1) scrape current (model objects)
         current_jobs = await scraper_func()
-        current_jobs_dict = {job.job_id: job for job in current_jobs}
 
-        # 2) load baseline and rehydrate to model objects
+        # 2) load baseline and rehydrate
         previous_jobs_raw = load_json(company_name)               # {job_id: dict}
         previous_jobs = rehydrate_jobs(company_name, previous_jobs_raw)  # {job_id: Model}
 
-        logger.info(f"📦 Previous: {len(previous_jobs)} | Current: {len(current_jobs_dict)}")
+        # 2b) Big-drop confirmation (refetch + union) BEFORE diffing
+        prev_count = len(previous_jobs)
+        if prev_count > 0:
+            current_jobs = await confirm_big_drop(
+                prev_count=prev_count,
+                current_jobs=current_jobs,
+                scraper_func=scraper_func,
+                ratio_threshold=BIG_DROP_REFETCH_RATIO,
+                max_refetches=MAX_REFETCHES,
+                logger=logger,
+            )
 
-        # 3) compute diffs
-        new_job_objs = diff_jobs(current_jobs_dict, previous_jobs)
-        deleted_job_objs = diff_jobs(previous_jobs, current_jobs_dict)
+        current_jobs_dict = {job.job_id: job for job in current_jobs}
+        logger.info(f"📦 Previous: {len(previous_jobs)} | Current (after confirmation): {len(current_jobs_dict)}")
+
+        # 3) Stability path (company-scoped) vs. regular diff
+        if STABILITY_ENABLED.get(company_name, False):
+            new_job_objs, deleted_job_objs, quarantined_missing, reopened = apply_stability(
+                company_name=company_name,
+                base_data_path=BASE_DATA_PATH,
+                current_jobs_dict=current_jobs_dict,
+                previous_jobs=previous_jobs,
+                miss_threshold=MISS_THRESHOLD,
+                reopen_grace_days=REOPEN_GRACE_DAYS,
+                logger=logger,
+            )
+            logger.info(f"🟨 Quarantined(missing<thr): {len(quarantined_missing)} | 🔁 Reopened: {len(reopened)}")
+        else:
+            # Regular behavior for other companies
+            new_job_objs = diff_jobs(current_jobs_dict, previous_jobs)
+            deleted_job_objs = diff_jobs(previous_jobs, current_jobs_dict)
+            quarantined_missing, reopened = {}, {}
 
         logger.info(f"🧮 New: {len(new_job_objs)} | Deleted: {len(deleted_job_objs)}")
 
-        # 4) save snapshot
+        # 4) Save the *current snapshot* (keep store accurate)
         save_json(
             company_name,
             {jid: job.to_dict() for jid, job in current_jobs_dict.items()},
@@ -75,13 +108,13 @@ async def run_scraper(company_name, scraper_func, force_version=False) -> Scrape
 
         runtime = time.time() - start_time
         logger.info(f"✅ Finished scraping {company_name} in {runtime:.2f} seconds")
-        return ScrapeSummary(company=company_name, new=new_job_objs, deleted=deleted_job_objs, error=None)
+        return ScrapeSummary(company=company_name, new=new_job_objs, deleted=deleted_job_objs, error=None, reopened=reopened)
 
     except Exception as e:
         runtime = time.time() - start_time
         logger.exception(f"❌ Scraper for {company_name} failed after {runtime:.2f} seconds: {e}")
         # return the error string so the digest can explain why this company has no jobs in the email
-        return ScrapeSummary(company=company_name, new={}, deleted={}, error=str(e))
+        return ScrapeSummary(company=company_name, new={}, deleted={}, error=str(e), reopened={})
 
 def _format_new_job(job) -> str:
     """Pretty block for a 'new' job; works for model or dict (fallback)."""
@@ -114,12 +147,12 @@ def build_digest(results, no_email: bool):
     sections = []
     total_new = 0
     total_deleted = 0
+    total_reopened = 0  # <-- NEW
 
-    no_change_list = []      # companies enabled but no changes
-    skipped_list = []        # companies disabled by config
-    failed_list = []         # (company, error)
+    no_change_list = []
+    skipped_list = []
+    failed_list = []
 
-    # First pass: build sections for companies with changes and collect reasons for others
     for r in results:
         enabled = _company_enabled(r.company)
 
@@ -128,23 +161,25 @@ def build_digest(results, no_email: bool):
             continue
 
         n, d = len(r.new), len(r.deleted)
+        # Count reopened safely
+        r_opened_dict = getattr(r, "reopened", {}) or {}
+        r_open = len(r_opened_dict)
 
         if not enabled:
-            # explain why it’s not in the digest
-            if n or d:
-                # even if there were changes, we’re skipping by policy
+            if n or d or r_open:
                 skipped_list.append(f"{r.company} (changes suppressed by config)")
             else:
                 skipped_list.append(f"{r.company} (suppressed by config)")
             continue
 
-        if n == 0 and d == 0:
+        # If there are no new/deleted but there ARE reopened, we should still render.
+        if (n == 0 and d == 0 and r_open == 0):
             no_change_list.append(r.company)
             continue
 
-        # enabled and has changes -> render full section
         total_new += n
         total_deleted += d
+        total_reopened += r_open   # <-- NEW
         sections.append(f"==== {r.company.upper()} ====")
 
         if n:
@@ -152,6 +187,20 @@ def build_digest(results, no_email: bool):
             for job in r.new.values():
                 sections.append(_format_new_job(job))
                 sections.append("")
+
+        # Reopened (present again before deletion threshold) — list URLs only
+        if r_open:
+            sections.append(f"🔁 Reopened before delete threshold (not new): {r_open}")
+            # De-dupe URLs just in case
+            seen_urls = set()
+            for j in r_opened_dict.values():
+                url = getattr(j, "url", "") if hasattr(j, "url") else j.get("url", "")
+                title = getattr(j, "title", "") if hasattr(j, "title") else j.get("title", "")
+                if url and url not in seen_urls:
+                    seen_urls.add(url)
+                    prefix = f"{title} – " if title else ""
+                    sections.append(f"{prefix}{url}")
+            sections.append("")
 
         if d:
             sections.append(f"🗑️ Deleted jobs: {d}")
@@ -163,7 +212,6 @@ def build_digest(results, no_email: bool):
 
         sections.append("------------------------------")
 
-    # Add “No changes” / “Skipped” / “Failed” summaries
     if no_change_list:
         sections.append("🟦 No changes:")
         sections.append(", ".join(sorted(no_change_list)))
@@ -178,7 +226,6 @@ def build_digest(results, no_email: bool):
     if failed_list:
         sections.append("⚠️ Failed scrapers:")
         for company, err in failed_list:
-            # keep error short
             msg = err.strip().split("\n", 1)[0]
             if len(msg) > 200:
                 msg = msg[:200] + "…"
@@ -190,7 +237,8 @@ def build_digest(results, no_email: bool):
 
     from datetime import datetime, timezone
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    subject = f"Job Digest ({ts}) — New: {total_new}, Deleted: {total_deleted}"
+    # Optional: include reopened count in subject
+    subject = f"Job Digest ({ts}) — New: {total_new}, Deleted: {total_deleted}, Reopened: {total_reopened}"
     body = "\n".join(sections).strip()
     if len(body) > 190_000:
         body = body[:190_000] + "\n\n…(truncated)"

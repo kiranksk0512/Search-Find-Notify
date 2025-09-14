@@ -40,3 +40,25 @@ def cleanup_old_backups(company_name):
                 file.unlink()
         except Exception:
             continue
+
+
+# add at bottom
+def load_aux_json(company_name: str, tag: str):
+    """
+    Load a sidecar JSON for a company, e.g. miss counts.
+    Stored as {BASE_DATA_PATH}/{company}_{tag}.json
+    """
+    path = Path(BASE_DATA_PATH) / f"{company_name}_{tag}.json"
+    if not path.exists():
+        return {}
+    with open(path, "r") as f:
+        return json.load(f)
+
+def save_aux_json(company_name: str, tag: str, data):
+    """
+    Save a sidecar JSON for a company, e.g. miss counts.
+    """
+    Path(BASE_DATA_PATH).mkdir(parents=True, exist_ok=True)
+    path = Path(BASE_DATA_PATH) / f"{company_name}_{tag}.json"
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)

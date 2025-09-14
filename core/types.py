@@ -7,3 +7,4 @@ class ScrapeSummary:
     new: Dict[str, Any]
     deleted: Dict[str, Any]
     error: Optional[str] = None  # None if success; string if failed
+    reopened: Optional[Dict[str, Any]] = None  # <-- add this line

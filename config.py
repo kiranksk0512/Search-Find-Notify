@@ -29,3 +29,12 @@ REOPEN_GRACE_DAYS = 30      # if a job reappears within this, mark as reopened (
 # Big-drop refetch
 BIG_DROP_REFETCH_RATIO = 0.6   # if current_count < prev_count * 0.6, do a second pass
 MAX_REFETCHES = 1              # how many extra passes to try
+
+
+# --- Stability controls ---
+# Which companies use the stability layer (consecutive-miss deletion + reopened tracking)
+STABILITY_ENABLED = {
+    "microsoft": True,
+    # "netflix": False,
+    # "apple": False,
+}

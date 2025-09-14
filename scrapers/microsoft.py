@@ -122,7 +122,6 @@ def _normalize(raw: Dict[str, Any], exp_track: Optional[str] = None) -> Microsof
         education_level=education_level,
         primary_location=primary_location,
         locations=locations,
-        description_html=description_html,
         last_updated=last_updated,
         experience_track=exp_track,
     )

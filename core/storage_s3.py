@@ -115,10 +115,12 @@ def cleanup_old_backups(company_name: str) -> None:
             try:
                 # Remove company prefix and suffix to isolate the timestamp
                 # name example: meta_jobs_20250819_120102.json
+                # inside cleanup_old_backups(...)
                 ts_str = name.replace(f"{company_name}_jobs_", "").replace(".json", "")
-                file_time = datetime.strptime(ts_str, "%Y%m%d_%H%M%S")
+                file_time = datetime.strptime(ts_str, "%Y%m%d_%H%M%S").replace(tzinfo=timezone.utc)  # <-- add tzinfo
                 if file_time < cutoff:
                     keys_to_delete.append(key)
+
             except Exception:
                 # Ignore files that don't match the timestamp pattern
                 continue
@@ -137,3 +139,33 @@ def cleanup_old_backups(company_name: str) -> None:
             Bucket=S3_BUCKET,
             Delete={"Objects": [{"Key": k} for k in batch], "Quiet": True},
         )
+
+
+# add helpers
+def _aux_key(company_name: str, tag: str) -> str:
+    # e.g. {S3_PREFIX}/microsoft_miss_counts.json
+    return _join(S3_PREFIX, f"{company_name}_{tag}.json")
+
+def load_aux_json(company_name: str, tag: str):
+    key = _aux_key(company_name, tag)
+    try:
+        obj = s3.get_object(Bucket=S3_BUCKET, Key=key)
+        body = obj["Body"].read()
+        return json.loads(body)
+    except ClientError as e:
+        code = e.response.get("Error", {}).get("Code")
+        if code in ("NoSuchKey", "NoSuchBucket"):
+            return {}
+        raise
+    except Exception:
+        return {}
+
+def save_aux_json(company_name: str, tag: str, data):
+    key = _aux_key(company_name, tag)
+    body = json.dumps(data, indent=2).encode("utf-8")
+    s3.put_object(
+        Bucket=S3_BUCKET,
+        Key=key,
+        Body=body,
+        ContentType="application/json",
+    )
