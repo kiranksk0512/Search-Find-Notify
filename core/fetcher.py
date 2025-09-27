@@ -72,19 +72,33 @@ async def get_json(url, headers=None, params=None, cookies=None):
     for attempt in range(1, MAX_RETRIES + 1):
         try:
             async with aiohttp.ClientSession(cookies=cookies) as session:
+                # logger.debug(f"🌐 Attempt {attempt}: GET {url} "
+                #              f"headers={headers} params={params}")  # log request details
+
                 async with session.get(url, headers=headers, params=params, timeout=10) as response:
                     if response.status == 200:
-                        return await response.json()
+                        try:
+                            data = await response.json()
+                            logger.debug(f"✅ Success from {url} (attempt {attempt}), "
+                                         f"length={len(str(data))} chars")
+                            return data
+                        except Exception as parse_err:
+                            logger.error(f"⚠️ Failed to parse JSON from {url} "
+                                         f"(attempt {attempt}): {parse_err}")
+                            return None
                     else:
-                        logger.warning(f"⚠️ Status {response.status} from {url}")
+                        text = await response.text()
+                        logger.warning(f"⚠️ Status {response.status} from {url} "
+                                       f"(attempt {attempt}), body snippet={text[:200]}")
+
         except Exception as e:
-            logger.error(f"⚠️ Attempt {attempt} failed: {e}")
+            logger.error(f"⚠️ Attempt {attempt} failed for {url}: {e}")
 
         await asyncio.sleep(RETRY_DELAY)
 
-    logger.error(f"❌ All {MAX_RETRIES} attempts failed for {url}")
+    logger.error(f"❌ All {MAX_RETRIES} attempts failed for {url} "
+                 f"headers={headers} params={params}")
     return None
-
 
 def _retryable_status(status: Optional[int]) -> bool:
     # Retry on 429 and 5xx
