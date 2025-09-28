@@ -16,6 +16,36 @@ USER_AGENTS = [
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.4 Safari/605.1.15"
 ]
 
+# === Exact filters copied from your DevTools request ===
+APPLE_FILTER_LOCATIONS = ["postLocation-USA"]
+
+APPLE_FILTER_TEAMS = [
+    {"team": "teamsAndSubTeams-SFTWR", "subTeam": "subTeam-AF"},
+    {"team": "teamsAndSubTeams-MLAI", "subTeam": "subTeam-MLI"},
+    {"team": "teamsAndSubTeams-MLAI", "subTeam": "subTeam-DLRL"},
+    {"team": "teamsAndSubTeams-MLAI", "subTeam": "subTeam-NLP"},
+    {"team": "teamsAndSubTeams-MLAI", "subTeam": "subTeam-CV"},
+    {"team": "teamsAndSubTeams-MLAI", "subTeam": "subTeam-AR"},
+    {"team": "teamsAndSubTeams-HRDWR", "subTeam": "subTeam-SDE"},
+    {"team": "teamsAndSubTeams-SFTWR", "subTeam": "subTeam-MCHLN"},
+    {"team": "teamsAndSubTeams-SFTWR", "subTeam": "subTeam-COS"},
+    {"team": "teamsAndSubTeams-SFTWR", "subTeam": "subTeam-SQAT"},
+    {"team": "teamsAndSubTeams-SFTWR", "subTeam": "subTeam-CLD"},
+    {"team": "teamsAndSubTeams-SFTWR", "subTeam": "subTeam-ISTECH"},
+    {"team": "teamsAndSubTeams-SFTWR", "subTeam": "subTeam-DSR"},
+    {"team": "teamsAndSubTeams-SFTWR", "subTeam": "subTeam-WSFT"},
+    {"team": "teamsAndSubTeams-STDNT", "subTeam": "subTeam-INTRN"},
+    {"team": "teamsAndSubTeams-STDNT", "subTeam": "subTeam-CORP"},
+    {"team": "teamsAndSubTeams-STDNT", "subTeam": "subTeam-ASTR"},
+    {"team": "teamsAndSubTeams-STDNT", "subTeam": "subTeam-ASLP"},
+    {"team": "teamsAndSubTeams-STDNT", "subTeam": "subTeam-ARPS"},
+    {"team": "teamsAndSubTeams-STDNT", "subTeam": "subTeam-ACCP"},
+    {"team": "teamsAndSubTeams-STDNT", "subTeam": "subTeam-ACR"},
+    {"team": "teamsAndSubTeams-HRDWR", "subTeam": "subTeam-MCHLN"},
+    {"team": "teamsAndSubTeams-SFTWR", "subTeam": "subTeam-EPM"},
+    {"team": "teamsAndSubTeams-SFTWR", "subTeam": "subTeam-SEC"},
+]
+
 def build_headers():
     return {
         "Content-Type": "application/json",
@@ -24,11 +54,18 @@ def build_headers():
         "User-Agent": random.choice(USER_AGENTS)
     }
 
-def build_payload(page):
+def build_payload(page: int):
+    """
+    Payload mirrors the DevTools request you shared:
+      - locations: ["postLocation-USA"]
+      - teams: list of {team, subTeam}
+      - sort: "" (exactly as in your payload)
+    """
     return {
         "query": "",
         "filters": {
-            "locations": ["postLocation-USA"]
+            "locations": APPLE_FILTER_LOCATIONS,
+            "teams": APPLE_FILTER_TEAMS
         },
         "page": page,
         "locale": "en-us",
