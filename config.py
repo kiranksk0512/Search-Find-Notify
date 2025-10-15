@@ -1,6 +1,6 @@
 EMAIL_SENDER = "kiranksk0512@gmail.com"
 EMAIL_PASSWORD = "angr rxwb otyc omyr"
-EMAIL_RECEIVER = "aquanumber01@gmail.com"
+EMAIL_RECEIVER = "srikarchintha7@gmail.com"
 
 BASE_DATA_PATH = "data"
 
@@ -9,6 +9,7 @@ COMPANY_VERSIONING = {
     "apple": False,
     "google": False,
     "microsoft": False,
+    "blackrock": False
     # Add more companies as needed
 }
 
@@ -16,6 +17,7 @@ COMPANY_EMAIL_NOTIFICATIONS = {
     "apple": True,
     "google": True,
     "meta": True,
+    "blackrock": True
 }
 
 # Backup retention policy (in days)
