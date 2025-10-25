@@ -286,7 +286,7 @@ def build_digest(results, no_email: bool):
         return None
 
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    subject = f"🔥🐦‍🔥🔥🧨🚒🔥🔥 FireStorm is here, ({ts}) — New: {total_new}, Deleted: {total_deleted}, Reopened: {total_reopened}"
+    subject = f"🔥🐦‍🔥🔥 FireStorm 🧨🚒🔥🔥 is here, ({ts}) — New: {total_new}, Deleted: {total_deleted}, Reopened: {total_reopened}"
     body = "\n".join(sections).strip()
     if len(body) > 190_000:
         body = body[:190_000] + "\n\n…(truncated)"

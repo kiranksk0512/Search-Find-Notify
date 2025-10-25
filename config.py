@@ -39,3 +39,8 @@ STABILITY_ENABLED = {
     # "netflix": False,
     # "apple": False,
 }
+
+# disable one source if it misbehaves:
+BLACKROCK_USE_KIRAN=True
+# or
+BLACKROCK_USE_CLASSIC=True

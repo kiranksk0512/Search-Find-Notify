@@ -8,6 +8,7 @@ from models.netflix_job import NetflixJob
 from models.microsoft_job import MicrosoftJob
 from models.goldman_job import GoldmanJob
 from models.oracle_job import OracleJob
+from models.mergedblackrock_job import MergedBlackRockJob
 
 REGISTRY: Dict[str, Type[BaseJob]] = {
     MetaJob.COMPANY_KEY: MetaJob,
@@ -17,7 +18,8 @@ REGISTRY: Dict[str, Type[BaseJob]] = {
     NetflixJob.COMPANY_KEY: NetflixJob,
     MicrosoftJob.COMPANY_KEY: MicrosoftJob,
     GoldmanJob.COMPANY_KEY: GoldmanJob,
-    OracleJob.COMPANY_KEY: OracleJob
+    OracleJob.COMPANY_KEY: OracleJob,
+    MergedBlackRockJob.COMPANY_KEY: MergedBlackRockJob,
 }
 
 def get_model_cls(company: str) -> Type[BaseJob]:
