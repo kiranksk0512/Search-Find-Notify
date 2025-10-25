@@ -1,27 +1,32 @@
 import json
-from core.fetcher import post_form 
-from core.logger import get_company_logger
-from core.meta_utils import extract_meta_tokens
-from models.meta_job import MetaJob
-from datetime import datetime
-from zoneinfo import ZoneInfo
 import time
 import random
 import os
 import asyncio
+import urllib.parse
+import uuid
+import hashlib
+import traceback
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
+from core.fetcher import post_form
+from core.logger import get_company_logger
+from core.meta_utils import extract_meta_tokens
+from models.meta_job import MetaJob
+from core.context import get_company  # ✅ add company context
+
+# performs a token refresh + one full re-scrape on anomaly (zero or “too few” jobs)
+
+# uses should_persist_jobs(...) inside get_jobs() to decide whether to skip S3 persist + SES notifications
+
+# surfaces should_persist and a short decision_reason back to the caller so your scheduler can branch cleanly
 
 logger = get_company_logger()
+
 GRAPHQL_URL = "https://www.metacareers.com/graphql"
-DOC_ID = "29615178951461218"  # Persisted Meta job search doc ID
+DOC_ID = "29615178951461218"
 FRIENDLY_NAME = "CareersJobSearchResultsDataQuery"
-
-
-# 'x-fb-lsd': Anti-CSRF token. Must be fetched dynamically or hardcoded per session.
-# 'user-agent', 'sec-ch-ua', 'x-asbd-id': Might need updating every few months or per user.
-# 'referer': Only if Meta changes frontend URLs.
-
-
 
 COOKIES = {
     'datr': 'BNaDaLVxvClP3ifeL2rvnxJH',
@@ -41,14 +46,20 @@ ACCEPT_LANGUAGES = [
     "en;q=0.9"
 ]
 
-# 'cookies': Optional for now, but might be required in future.
-# Right now you're not using them, and it's still working — but:
+# ----------------- small helpers -----------------
 
-# The datr cookie is usually a browser fingerprint.
+def _hash_short(s: str) -> str:
+    try:
+        return hashlib.sha256(s.encode("utf-8")).hexdigest()[:10]
+    except Exception:
+        return "na"
+    
+def _mask(v, keep: int = 4) -> str:
+    if v is None:
+        return "null"
+    s = str(v)
+    return f"{s[:keep]}…{len(s)}"
 
-# The wd cookie is screen width-height. It’s usually not validated strictly.
-
-# ✅ You can omit these for now. If Meta tightens validation, you might need to pass these.
 
 def convert_to_edt(utc_timestamp):
     try:
@@ -58,7 +69,7 @@ def convert_to_edt(utc_timestamp):
     except Exception:
         return "Unknown"
 
-import urllib.parse
+# ----------------- payload & parsing -----------------
 
 def get_payload(tokens, *, sort_by_new=False, after_cursor=None, req_id="1"):
     variables = {
@@ -82,53 +93,61 @@ def get_payload(tokens, *, sort_by_new=False, after_cursor=None, req_id="1"):
         variables["search_input"]["after_cursor"] = after_cursor
 
     payload_dict = {
-        'av': '0',    
-        '__user': '0',   # Static unless logged-in
+        'av': '0',
+        '__user': '0',
         '__a': '1',
-        '__req': req_id,   # ✅ Could change (request ID, used for batching)
-        '__hs': tokens["__hs"], # ✅ Could change (server session, probably not critical)
-        'dpr': '2',    # Device pixel ratio — static
-        '__ccg': 'EXCELLENT',  # Static
-        '__rev': tokens["__rev"], # ✅ Meta internal rev/version — **may change weekly**
-        # '__s': 'u59kyl:8ogo8v:exjvo1', # ✅ Session fingerprint — **can change per session**
-        '__hsi': tokens["__hsi"], # ✅ Internal session ID — **can change**
-        '__dyn': '7xeUmwkHg7ebwKBAg5S1Dxu13wqovzEdEc8uxa1twYwJw5ux60Vo1upE4W0OE3nwaq1xwEw7Bx61vw4iwBgao1O82Iwb66oG0OU5a1qw8W1uwa-0raazoiwfe0Lo6-1FwcO0JE24wio1587u1rxC1RwkE', # ✅ Dynamic JS bundle encoding — often changes
-        # '__hsdp': '...', # ✅ Possibly dynamic — can omit unless required
-        'lsd': tokens["lsd"], # ✅ Same as header — CSRF token — **must match header**
-        'jazoest': tokens["jazoest"],    # ✅ Internal integrity check — **depends on lsd and session**
-        '__spin_r': tokens["__spin_r"], # ✅ Internal versioning — often changes
-        '__spin_b': tokens["__spin_b"],  # Static
-        '__spin_t': str(int(time.time())), # ✅ Timestamp — should reflect current UNIX time
-        '__jssesw': '1', # Probably static
-        'fb_api_caller_class': 'RelayModern',  # Static
-        'fb_api_req_friendly_name': FRIENDLY_NAME, # Static
-        'doc_id': DOC_ID,   # Static unless query changes
+        '__req': req_id,
+        '__hs': tokens.get("__hs", ""),
+        'dpr': '2',
+        '__ccg': 'EXCELLENT',
+        '__rev': tokens.get("__rev", ""),
+        '__hsi': tokens.get("__hsi", ""),
+        '__dyn': '7xeUmwkHg7ebwKBAg5S1Dxu13wqovzEdEc8uxa1twYwJw5ux60Vo1upE4W0OE3nwaq1xwEw7Bx61vw4iwBgao1O82Iwb66oG0OU5a1qw8W1uwa-0raazoiwfe0Lo6-1FwcO0JE24wio1587u1rxC1RwkE',
+        'lsd': tokens.get("lsd", ""),
+        'jazoest': tokens.get("jazoest", ""),
+        '__spin_r': tokens.get("__spin_r", ""),
+        '__spin_b': tokens.get("__spin_b", ""),
+        '__spin_t': str(int(time.time())),
+        '__jssesw': '1',
+        'fb_api_caller_class': 'RelayModern',
+        'fb_api_req_friendly_name': FRIENDLY_NAME,
+        'doc_id': DOC_ID,
         'variables': json.dumps(variables),
-        'server_timestamps': 'true', # Static
+        'server_timestamps': 'true',
     }
 
-    return urllib.parse.urlencode(payload_dict)
+    return urllib.parse.urlencode(payload_dict), variables
 
+def parse_jobs(data, *, scrape_id: str, mode: bool, page: int):
+    company = get_company()
+    if not isinstance(data, dict):
+        logger.error(f"[company={company}] [{scrape_id}] ❌ Non-dict JSON on parse (mode={mode} page={page}) type={type(data)}")
+        return []
 
-def parse_jobs(data):
+    errors = data.get("errors")
+    if errors:
+        logger.warning(f"[company={company}] [{scrape_id}] ⚠️ GraphQL errors present (mode={mode} page={page}): {errors}")
 
-    try:
-        with open("meta_raw_data.json", "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        print(f"⚠️ Failed to save raw Meta data: {e}")
+    root = data.get("data", {})
+    node = root.get("job_search_with_featured_jobs", {})
+    all_jobs = node.get("all_jobs", [])
+    if not isinstance(all_jobs, list):
+        logger.warning(f"[company={company}] [{scrape_id}] ⚠️ Unexpected all_jobs type: {type(all_jobs)} (mode={mode} page={page})")
+        all_jobs = []
 
     jobs = []
-    all_jobs = data.get("data", {}).get("job_search_with_featured_jobs", {}).get("all_jobs", [])
-
     for job in all_jobs:
         job_id = job.get("id")
         title = job.get("title", "Unknown")
-        url = f"https://www.metacareers.com/jobs/{job_id}"
+        url = f"https://www.metacareers.com/jobs/{job_id}" if job_id else "Unknown"
         location = ", ".join(job.get("locations", [])) if "locations" in job else "Unknown"
         sub_teams = ", ".join(job.get("sub_teams", [])) if "sub_teams" in job else "Unknown"
         teams = ", ".join(job.get("teams", [])) if "teams" in job else "Unknown"
         posted = convert_to_edt(job.get("listed_on", ""))
+
+        if not job_id:
+            logger.debug(f"[company={company}] [{scrape_id}] ℹ️ Skipping job without id (mode={mode} page={page}) raw={job}")
+            continue
 
         jobs.append(MetaJob(
             job_id=job_id,
@@ -140,82 +159,258 @@ def parse_jobs(data):
             date_posted=posted
         ))
 
+    logger.info(f"[company={company}] [{scrape_id}] 🧩 Parsed jobs: {len(jobs)} (mode={mode} page={page})")
     return jobs
 
-async def fetch_all_pages_for_mode(tokens, *, sort_by_new: bool):
-    logger.info(f"▶️ Meta scrape mode sort_by_new={sort_by_new}")
+# ----------------- network page fetch -----------------
+
+async def _fetch_page(tokens, *, sort_by_new: bool, after_cursor, req_id: str, scrape_id: str, page: int, attempt: int, ua: str):
+    company = get_company()
+    HEADERS = {
+        'accept': '*/*',
+        'accept-language': random.choice(ACCEPT_LANGUAGES),
+        'cache-control': 'no-cache',
+        'content-type': 'application/x-www-form-urlencoded',
+        'origin': 'https://www.metacareers.com',
+        'pragma': 'no-cache',
+        'referer': 'https://www.metacareers.com/jobs',
+        'sec-ch-ua': '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"macOS"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': ua,   # <-- use run-scoped UA,
+        'x-asbd-id': '359341',
+        'x-fb-friendly-name': FRIENDLY_NAME,
+        'x-fb-lsd': tokens.get("lsd", ""),
+    }
+
+    payload, variables = get_payload(tokens, sort_by_new=sort_by_new, after_cursor=after_cursor, req_id=req_id)
+
+    cursor_dbg = variables["search_input"].get("after_cursor")
+    cursor_hash = _hash_short(cursor_dbg) if cursor_dbg else "none"
+
+    t0 = time.time()
+    try:
+        json_data = await post_form(GRAPHQL_URL, payload, HEADERS)
+        dt = (time.time() - t0) * 1000
+        body_len = len(json.dumps(json_data)) if isinstance(json_data, dict) else 0
+
+        logger.info(
+            f"[company={company}] [{scrape_id}] ⬇️ Page fetch OK "
+            f"(mode={sort_by_new} page={page} attempt={attempt} req_id={req_id} cursor={cursor_hash} "
+            f"ms={dt:.0f} size={body_len})"
+        )
+
+        return json_data, HEADERS
+    except Exception as e:
+        dt = (time.time() - t0) * 1000
+        logger.error(
+            f"[company={company}] [{scrape_id}] ❌ Page fetch EXCEPTION "
+            f"(mode={sort_by_new} page={page} attempt={attempt} req_id={req_id} cursor={cursor_hash} ms={dt:.0f}): {e}\n{traceback.format_exc()}"
+        )
+        return None, HEADERS
+
+async def fetch_all_pages_for_mode(tokens, *, sort_by_new: bool, scrape_id: str, ua: str):
+    company = get_company()
+    logger.info(f"[company={company}] [{scrape_id}] ▶️ Meta scrape mode sort_by_new={sort_by_new}")
     collected = []
     seen_ids = set()
     after_cursor = None
     page = 1
+    max_retries = 1
 
     while True:
         req_id = str(page)
-        HEADERS = {
-            'accept': '*/*',
-            'accept-language': random.choice(ACCEPT_LANGUAGES),
-            'cache-control': 'no-cache',
-            'content-type': 'application/x-www-form-urlencoded',
-            'origin': 'https://www.metacareers.com',
-            'pragma': 'no-cache',
-            'referer': 'https://www.metacareers.com/jobs',
-            'sec-ch-ua': '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"macOS"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': random.choice(USER_AGENTS),
-            'x-asbd-id': '359341',
-            'x-fb-friendly-name': FRIENDLY_NAME,
-            'x-fb-lsd': tokens["lsd"],
-        }
 
-        payload = get_payload(tokens, sort_by_new=sort_by_new, after_cursor=after_cursor, req_id=req_id)
-        json_data = await post_form(GRAPHQL_URL, payload, HEADERS)
+        # retry loop
+        json_data = None
+        headers_used = None
+        for attempt in range(1, max_retries + 1):
+            json_data, headers_used = await _fetch_page(
+                tokens, sort_by_new=sort_by_new, after_cursor=after_cursor,
+                req_id=req_id, scrape_id=scrape_id, page=page, attempt=attempt, ua=ua
+            )
+            if json_data:
+                break
+            # backoff
+            if attempt < max_retries:                   # <-- add this guard
+                sleep_s = random.uniform(1.0, 2.0) * attempt
+                logger.warning(f"[company={company}] [{scrape_id}] 🔁 Retry (mode={sort_by_new} page={page}) in {sleep_s:.1f}s…")
+                await asyncio.sleep(sleep_s)
+
+
         if not json_data:
-            logger.error("❌ Empty/failed GraphQL response.")
+            logger.error(f"[company={company}] [{scrape_id}] ❌ Empty/failed GraphQL response after retries (mode={sort_by_new} page={page}).")
             break
 
-        jobs = parse_jobs(json_data)
+        # sanity check for GraphQL shape
+        if "data" not in json_data and "errors" not in json_data:
+            logger.warning(f"[company={company}] [{scrape_id}] ⚠️ Unexpected JSON shape (no data/errors). Will stop paging. (mode={sort_by_new} page={page})")
+            break
+
+        jobs = parse_jobs(json_data, scrape_id=scrape_id, mode=sort_by_new, page=page)
+
         # dedup within this mode
         new = [j for j in jobs if j.job_id not in seen_ids]
         for j in new:
             seen_ids.add(j.job_id)
         collected.extend(new)
+        logger.info(f"[company={company}] [{scrape_id}] 📦 Page {page} added {len(new)} new (deduped {len(jobs) - len(new)}), total={len(collected)} (mode={sort_by_new})")
 
+        # page_info navigation
         page_info = (json_data.get("data", {})
                                .get("job_search_with_featured_jobs", {})
                                .get("page_info", {}))
-        if page_info.get("has_next_page") and page_info.get("end_cursor"):
-            after_cursor = page_info["end_cursor"]
+        has_next = bool(page_info.get("has_next_page"))
+        end_cursor = page_info.get("end_cursor")
+        end_cursor_hash = _hash_short(end_cursor) if end_cursor else "none"
+
+        logger.debug(f"[company={company}] [{scrape_id}] 🔎 page_info(has_next={has_next}, end_cursor={end_cursor_hash}) (mode={sort_by_new} page={page})")
+
+        if has_next and end_cursor:
+            after_cursor = end_cursor
             page += 1
             await asyncio.sleep(random.uniform(1.0, 3.0))
         else:
             break
 
-    logger.info(f"✅ mode sort_by_new={sort_by_new}: got {len(collected)} unique jobs")
+    logger.info(f"[company={company}] [{scrape_id}] ✅ mode sort_by_new={sort_by_new}: got {len(collected)} unique jobs")
     return collected
 
+# ----------------- persist guard helper -----------------
 
-async def get_jobs():
-    logger.info("Starting Meta job scrape (union of both sort modes)…")
-    tokens = extract_meta_tokens()
-    await asyncio.sleep(random.uniform(0, 2.5))  # small jitter
+def should_persist_jobs(meta_result: dict, min_expected_count: int = 50) -> bool:
+    """
+    Return False if this looks like a bad/empty scrape that would trash S3 and flood SES.
+    Tune `min_expected_count` to your comfort (Meta ~800 per your note).
+    """
+    company = get_company()
+    if not meta_result:
+        return False
+    if meta_result.get("anomalous_zero"):
+        logger.warning(f"[company={company}] [{meta_result.get('scrape_id','na')}] 🧯 anomalous_zero=True; skip persist/notify.")
+        return False
+    jobs = meta_result.get("jobs") or []
+    if len(jobs) == 0:
+        logger.warning(f"[company={company}] [{meta_result.get('scrape_id','na')}] 🧯 zero jobs; skip persist/notify.")
+        return False
+    # guard against partial-site hiccups; only persist if reasonable volume
+    if len(jobs) < min_expected_count:
+        logger.warning(f"[company={company}] [{meta_result.get('scrape_id','na')}] 🧯 Too few jobs ({len(jobs)}<{min_expected_count}); treating as partial outage; skip persist/notify.")
+        return False
+    return True
 
-    # Fetch both views
-    jobs_default, jobs_new = await asyncio.gather(
-        fetch_all_pages_for_mode(tokens, sort_by_new=False),
-        fetch_all_pages_for_mode(tokens, sort_by_new=True)
-    )
+# ----------------- top-level: token refresh + decisioning -----------------
 
-    # Union by job_id (keep the first object; or merge fields if you like)
-    by_id = {}
-    for j in jobs_default + jobs_new:
-        if j.job_id not in by_id:
-            by_id[j.job_id] = j
+async def get_jobs(min_expected_count: int = 50):
+    """
+    Returns:
+      {
+        "jobs": [MetaJob, ...],
+        "scrape_id": str,
+        "anomalous_zero": bool,
+        "should_persist": bool,           # ✅ use this in your scheduler to skip S3/SES
+        "decision_reason": str,           # ✅ short reason for the decision
+        "default_count": int,
+        "new_count": int,
+    }
+    """
+    company = get_company()
+    
+    async def _scrape_once(label: str):
+        ua = random.choice(USER_AGENTS)
+        scrape_id = str(uuid.uuid4())[:8]
+        logger.info(f"[company={company}] [{scrape_id}] 🚀 Starting Meta job scrape ({label}; union of both sort modes)…")
 
-    all_jobs = list(by_id.values())
-    logger.info(f"🎉 Meta union: {len(all_jobs)} unique jobs (default={len(jobs_default)}, new={len(jobs_new)})")
-    return all_jobs
+        tokens = extract_meta_tokens() or {}
+        critical_missing = not (tokens.get("lsd") and tokens.get("__hsi") and tokens.get("__rev"))
+        if critical_missing:
+            logger.warning(f"[company={company}] [{scrape_id}] 🚨 Critical tokens missing; skipping this attempt to trigger retry.")
+            return {
+                "jobs": [],
+                "scrape_id": scrape_id,
+                "anomalous_zero": True,
+                "default_count": 0,
+                "new_count": 0,
+            }
+        logger.info(
+            f"[company={company}] [{scrape_id}] 🔑 tokens("
+            f"__rev={_mask(tokens.get('__rev'))}, "
+            f"__hsi={_mask(tokens.get('__hsi'))}, "
+            f"lsd={_mask(tokens.get('lsd'))}, "
+            f"jazoest={_mask(tokens.get('jazoest'))}, "
+            f"__spin_r={_mask(tokens.get('__spin_r'))})"
+        )
 
+        await asyncio.sleep(random.uniform(0, 2.5))  # small jitter
+
+        jobs_default, jobs_new = await asyncio.gather(
+            fetch_all_pages_for_mode(tokens, sort_by_new=False, scrape_id=scrape_id, ua=ua),
+            fetch_all_pages_for_mode(tokens, sort_by_new=True,  scrape_id=scrape_id, ua=ua),
+        )
+
+        by_id = {}
+        for j in jobs_default + jobs_new:
+            if j.job_id not in by_id:
+                by_id[j.job_id] = j
+
+        all_jobs = list(by_id.values())
+        logger.info(
+            f"[company={company}] [{scrape_id}] 🎉 Meta union: {len(all_jobs)} unique jobs "
+            f"(default={len(jobs_default)}, new={len(jobs_new)})"
+        )
+
+        anomalous_zero = (len(jobs_default) == 0 and len(jobs_new) == 0)
+        if anomalous_zero:
+            logger.warning(f"[company={company}] [{scrape_id}] 🚨 Anomalous ZERO across both modes – likely transient.")
+
+        return {
+            "jobs": all_jobs,
+            "scrape_id": scrape_id,
+            "anomalous_zero": anomalous_zero,
+            "default_count": len(jobs_default),
+            "new_count": len(jobs_new),
+        }
+
+    # First pass
+    result = await _scrape_once(label="first-pass")
+
+    # Decide if we should treat as anomaly and refresh tokens + retry once
+    too_few = (len(result["jobs"]) < min_expected_count)
+    needs_retry = result["anomalous_zero"] or too_few
+
+    if needs_retry:
+        reason = "anomalous_zero" if result["anomalous_zero"] else f"too_few({len(result['jobs'])}<{min_expected_count})"
+        logger.warning(f"[company={company}] [{result['scrape_id']}] 🧯 {reason}; refreshing tokens & retrying once…")
+        # Second pass with fresh tokens (the helper already re-fetches tokens each call)
+        result_retry = await _scrape_once(label="retry-after-token-refresh")
+
+        # If retry is clearly better (>= first count), use it
+        if len(result_retry["jobs"]) >= len(result["jobs"]):
+            logger.info(f"[company={company}] [{result_retry['scrape_id']}] ✅ Retry improved/kept count "
+                        f"{len(result['jobs'])} -> {len(result_retry['jobs'])}; using retry result.")
+            result = result_retry
+        else:
+            logger.info(f"[company={company}] [{result['scrape_id']}] ⚠️ Retry did not improve count; keeping first result.")
+
+    # Final decision: should we persist/notify?
+    persist = should_persist_jobs(result, min_expected_count=min_expected_count)
+    decision_reason = "ok"
+    if not persist:
+        if result["anomalous_zero"]:
+            decision_reason = "anomalous_zero"
+        elif len(result["jobs"]) == 0:
+            decision_reason = "zero_jobs"
+        elif len(result["jobs"]) < min_expected_count:
+            decision_reason = f"too_few({len(result['jobs'])}<{min_expected_count})"
+
+    # Attach decision fields for the scheduler to act on
+    result["should_persist"] = persist
+    result["decision_reason"] = decision_reason
+
+    logger.info(f"[company={company}] [{result['scrape_id']}] 🧭 decision: should_persist={persist} reason={decision_reason} "
+                f"total={len(result['jobs'])} default={result['default_count']} new={result['new_count']}")
+
+    return result

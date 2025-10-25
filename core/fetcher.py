@@ -1,9 +1,13 @@
 import random
+import hashlib
+import time
+import traceback
 import aiohttp
 import asyncio
 from core.logger import get_company_logger
 import json
 from typing import Optional, Dict, Any
+from core.context import get_company
 
 
 
@@ -11,6 +15,8 @@ MAX_RETRIES = 3
 RETRY_DELAY = 5  # seconds
 BASE_TIMEOUT = 10  # seconds
 MAX_BACKOFF = 20   # seconds
+CONNECT_TIMEOUT = 10
+READ_TIMEOUT = 15
 
 # Used for Apple, content type is application/json , reusable for JSON APIs
 async def post_json(url, payload, headers):
@@ -31,39 +37,93 @@ async def post_json(url, payload, headers):
     logger.error(f"❌ All {MAX_RETRIES} attempts failed for {url}")
     return None
 
-
-async def post_form(url, payload, headers, cookies=None, parse_json=True):
+def _short_hash(s: str) -> str:
+    try:
+        return hashlib.sha256(s.encode("utf-8")).hexdigest()[:10]
+    except Exception:
+        return "na"
+    
+async def post_form(
+    url: str,
+    payload: str,
+    headers: Dict[str, str],
+    cookies: Optional[Dict[str, str] | str] = None,
+    parse_json: bool = True,
+) -> Optional[Dict[str, Any] | str]:
     logger = get_company_logger()
-    for attempt in range(1, MAX_RETRIES + 1):
+    company = get_company()
+    req_id = _short_hash(f"{time.time()}:{random.random()}")
+
+    # Normalize cookie string → dict
+    if isinstance(cookies, str):
         try:
-            if isinstance(cookies, str):
-                cookies = dict(pair.split("=", 1) for pair in cookies.split("; "))
+            cookies = dict(pair.split("=", 1) for pair in cookies.split("; "))
+        except Exception:
+            cookies = None
 
-            async with aiohttp.ClientSession(cookies=cookies) as session:
-                async with session.post(url, data=payload, headers=headers, timeout=10) as response:
+    timeout = aiohttp.ClientTimeout(total=None, connect=CONNECT_TIMEOUT, sock_read=READ_TIMEOUT)
+
+    for attempt in range(1, MAX_RETRIES + 1):
+        t0 = time.time()
+        text = None
+        status = None
+        err = None
+        try:
+            async with aiohttp.ClientSession(cookies=cookies, timeout=timeout) as session:
+                async with session.post(url, data=payload, headers=headers) as response:
+                    status = response.status
                     text = await response.text()
-                    if response.status == 200:
-                        if parse_json:
-                            try:
-                                logger.warning("Parsing Json")
-                                return json.loads(text)
-                            except Exception as json_error:
-                                logger.error(f"❌ Failed to parse JSON: {json_error}")
-                                logger.error(f"Response content: {text[:300]}...")
-                                return None
-                        else:
-                            print(text[:10000]) 
-                            return text
-                    else:
-                        logger.warning(f"⚠️ Non-200 response: {response.status} - {await response.text()}")
-                        # logger.warning(f"⚠️ Status {response.status} from {url}")
+
+            elapsed_ms = int((time.time() - t0) * 1000)
+            body_len = len(text or "")
+            body_hash = _short_hash(text[:2048] or "") if text else "na"
+
+            if status == 200:
+                if parse_json:
+                    try:
+                        data = json.loads(text)
+                        # Don’t spam; one concise success line:
+                        logger.info(
+                            f"[company={company}] [req={req_id}] ✅ 200 OK "
+                            f"(attempt={attempt} ms={elapsed_ms} len={body_len} hash={body_hash})"
+                        )
+                        return data
+                    except Exception as json_error:
+                        logger.error(
+                            f"[company={company}] [req={req_id}] ❌ JSON parse error "
+                            f"(attempt={attempt} ms={elapsed_ms} len={body_len} hash={body_hash}): {json_error}"
+                        )
+                        # Show a small head of body for debugging (safe-ish):
+                        logger.error(text[:400] + ("..." if body_len > 400 else ""))
+                        # no return; fall through to retry below
+                else:
+                    logger.info(
+                        f"[company={company}] [req={req_id}] ✅ 200 OK (text mode) "
+                        f"(attempt={attempt} ms={elapsed_ms} len={body_len} hash={body_hash})"
+                    )
+                    return text
+            else:
+                # Non-200
+                logger.warning(
+                    f"[company={company}] [req={req_id}] ⚠️ Non-200 "
+                    f"status={status} (attempt={attempt} ms={elapsed_ms} len={body_len} hash={body_hash})"
+                )
         except Exception as e:
-            logger.error(f"response: {await response.text()}")
-            logger.error(f"⚠️ Attempt {attempt} failed: {e}")
+            err = e
+            elapsed_ms = int((time.time() - t0) * 1000)
+            # Don’t access response here; it may not exist.
+            logger.error(
+                f"[company={company}] [req={req_id}] ❌ Exception on POST "
+                f"(attempt={attempt} ms={elapsed_ms}): {e}\n{traceback.format_exc()}"
+            )
 
-        await asyncio.sleep(RETRY_DELAY)
+        # Backoff with jitter before next attempt
+        if attempt < MAX_RETRIES:
+            sleep_s = RETRY_DELAY * attempt * random.uniform(1.0, 2.0)
+            logger.warning(f"[company={company}] [req={req_id}] 🔁 retrying in {sleep_s:.1f}s… (attempt={attempt+1})")
+            await asyncio.sleep(sleep_s)
 
-    logger.error(f"❌ All {MAX_RETRIES} attempts failed for {url} {payload}")
+    logger.error(f"[company={company}] [req={req_id}] ❌ All {MAX_RETRIES} attempts failed for {url}")
     return None
 
 # Used for Netflix

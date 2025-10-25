@@ -57,8 +57,43 @@ async def run_scraper(company_name, scraper_func, force_version=False) -> Scrape
     start_time = time.time()
 
     try:
-        # 1) scrape current (model objects)
-        current_jobs = await scraper_func()
+        # 1) scrape current
+        raw_result = await scraper_func()
+
+        # --- Normalize result to a list of model objects + a persist decision ---
+        # Most scrapers return List[Job]; some return Dict with metadata
+        if isinstance(raw_result, dict) and "jobs" in raw_result:
+            current_jobs_list = raw_result.get("jobs") or []
+            should_persist = raw_result.get("should_persist", True)
+            decision_reason = raw_result.get("decision_reason", "ok")
+            default_count = raw_result.get("default_count", None)
+            new_count = raw_result.get("new_count", None)
+
+            logger.info(
+                f"🧭 Decision from scraper: should_persist={should_persist} "
+                f"reason={decision_reason} total={len(current_jobs_list)} "
+                f"(default={default_count}, new={new_count})"
+            )
+        else:
+            current_jobs_list = raw_result or []
+            should_persist = True
+            decision_reason = "ok"
+
+        # Skip persist/notify if scraper signals anomalous retrieval
+        if not should_persist:
+            logger.warning(
+                f"🧯 Skipping persist/notifications for {company_name} "
+                f"(reason={decision_reason}; count={len(current_jobs_list)})"
+            )
+            runtime = time.time() - start_time
+            logger.info(f"✅ Finished scraping {company_name} in {runtime:.2f} seconds (no-op persist/notify)")
+            return ScrapeSummary(
+                company=company_name, new={}, deleted={}, error=(
+                    f"🧯 Skipping persist/notifications for {company_name} "
+                    f"(reason={decision_reason}; count={len(current_jobs_list)})"
+                ),
+                reopened={}
+            )
 
         # 2) load baseline and rehydrate
         previous_jobs_raw = load_json(company_name)               # {job_id: dict}
@@ -66,17 +101,24 @@ async def run_scraper(company_name, scraper_func, force_version=False) -> Scrape
 
         # 2b) Big-drop confirmation (refetch + union) BEFORE diffing
         prev_count = len(previous_jobs)
+
+        async def _refetch_jobs_only():
+            r = await scraper_func()
+            if isinstance(r, dict) and "jobs" in r:
+                return r["jobs"] or []
+            return r or []
+
         if prev_count > 0:
-            current_jobs = await confirm_big_drop(
+            current_jobs_list = await confirm_big_drop(
                 prev_count=prev_count,
-                current_jobs=current_jobs,
-                scraper_func=scraper_func,
+                current_jobs=current_jobs_list,
+                scraper_func=_refetch_jobs_only,
                 ratio_threshold=BIG_DROP_REFETCH_RATIO,
                 max_refetches=MAX_REFETCHES,
                 logger=logger,
             )
 
-        current_jobs_dict = {job.job_id: job for job in current_jobs}
+        current_jobs_dict = {job.job_id: job for job in current_jobs_list}
         logger.info(f"📦 Previous: {len(previous_jobs)} | Current (after confirmation): {len(current_jobs_dict)}")
 
         # 3) Stability path (company-scoped) vs. regular diff
@@ -92,7 +134,6 @@ async def run_scraper(company_name, scraper_func, force_version=False) -> Scrape
             )
             logger.info(f"🟨 Quarantined(missing<thr): {len(quarantined_missing)} | 🔁 Reopened: {len(reopened)}")
         else:
-            # Regular behavior for other companies
             new_job_objs = diff_jobs(current_jobs_dict, previous_jobs)
             deleted_job_objs = diff_jobs(previous_jobs, current_jobs_dict)
             quarantined_missing, reopened = {}, {}
@@ -113,26 +154,33 @@ async def run_scraper(company_name, scraper_func, force_version=False) -> Scrape
     except Exception as e:
         runtime = time.time() - start_time
         logger.exception(f"❌ Scraper for {company_name} failed after {runtime:.2f} seconds: {e}")
-        # return the error string so the digest can explain why this company has no jobs in the email
         return ScrapeSummary(company=company_name, new={}, deleted={}, error=str(e), reopened={})
+
 
 def _format_new_job(job) -> str:
     """Pretty block for a 'new' job; works for model or dict (fallback)."""
     if hasattr(job, "format_message"):
         return job.format_message()
     # Fallback if ever needed
-    title = job.get("title", "Unknown")
-    url = job.get("url", "")
-    loc = job.get("location", "Unknown")
-    posted = job.get("date_posted", "Unknown")
-    return f"{title}\n{url}\nLocation: {loc}\nPosted: {posted}"
+    if isinstance(job, dict):
+        title = job.get("title", "Unknown")
+        url = job.get("url", "")
+        loc = job.get("location", "Unknown")
+        posted = job.get("date_posted", "Unknown")
+        return f"{title}\n{url}\nLocation: {loc}\nPosted: {posted}"
+    # Very minimal ultimate fallback
+    url = getattr(job, "url", "") or ""
+    title = getattr(job, "title", "") or "Unknown"
+    return f"{title}\n{url}"
 
 
 def _format_deleted_job(job) -> str:
     """For deleted jobs we typically just list URL."""
     if hasattr(job, "url"):
         return job.url or ""
-    return job.get("url", "")
+    if isinstance(job, dict):
+        return job.get("url", "")
+    return ""
 
 
 def _company_enabled(name: str) -> bool:
@@ -147,7 +195,7 @@ def build_digest(results, no_email: bool):
     sections = []
     total_new = 0
     total_deleted = 0
-    total_reopened = 0  # <-- NEW
+    total_reopened = 0  # <-- includes stability reopen events
 
     no_change_list = []
     skipped_list = []
@@ -161,7 +209,6 @@ def build_digest(results, no_email: bool):
             continue
 
         n, d = len(r.new), len(r.deleted)
-        # Count reopened safely
         r_opened_dict = getattr(r, "reopened", {}) or {}
         r_open = len(r_opened_dict)
 
@@ -172,14 +219,13 @@ def build_digest(results, no_email: bool):
                 skipped_list.append(f"{r.company} (suppressed by config)")
             continue
 
-        # If there are no new/deleted but there ARE reopened, we should still render.
         if (n == 0 and d == 0 and r_open == 0):
             no_change_list.append(r.company)
             continue
 
         total_new += n
         total_deleted += d
-        total_reopened += r_open   # <-- NEW
+        total_reopened += r_open
         sections.append(f"==== {r.company.upper()} ====")
 
         if n:
@@ -188,14 +234,13 @@ def build_digest(results, no_email: bool):
                 sections.append(_format_new_job(job))
                 sections.append("")
 
-        # Reopened (present again before deletion threshold) — list URLs only
         if r_open:
             sections.append(f"🔁 Reopened before delete threshold (not new): {r_open}")
-            # De-dupe URLs just in case
             seen_urls = set()
             for j in r_opened_dict.values():
-                url = getattr(j, "url", "") if hasattr(j, "url") else j.get("url", "")
-                title = getattr(j, "title", "") if hasattr(j, "title") else j.get("title", "")
+                # Handle model or dict
+                url = getattr(j, "url", "") if hasattr(j, "url") else (j.get("url", "") if isinstance(j, dict) else "")
+                title = getattr(j, "title", "") if hasattr(j, "title") else (j.get("title", "") if isinstance(j, dict) else "")
                 if url and url not in seen_urls:
                     seen_urls.add(url)
                     prefix = f"{title} – " if title else ""
@@ -204,7 +249,12 @@ def build_digest(results, no_email: bool):
 
         if d:
             sections.append(f"🗑️ Deleted jobs: {d}")
-            urls = [getattr(j, "url", "") if hasattr(j, "url") else j.get("url", "") for j in r.deleted.values()]
+            urls = []
+            for j in r.deleted.values():
+                if hasattr(j, "url"):
+                    urls.append(j.url or "")
+                elif isinstance(j, dict):
+                    urls.append(j.get("url", ""))
             urls = [u for u in urls if u]
             if urls:
                 sections.extend(urls)
@@ -235,10 +285,8 @@ def build_digest(results, no_email: bool):
     if not sections:
         return None
 
-    from datetime import datetime, timezone
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    # Optional: include reopened count in subject
-    subject = f"Job Digest ({ts}) — New: {total_new}, Deleted: {total_deleted}, Reopened: {total_reopened}"
+    subject = f"🔥🐦‍🔥🔥🧨🚒🔥🔥 FireStorm is here, ({ts}) — New: {total_new}, Deleted: {total_deleted}, Reopened: {total_reopened}"
     body = "\n".join(sections).strip()
     if len(body) > 190_000:
         body = body[:190_000] + "\n\n…(truncated)"
@@ -276,16 +324,18 @@ async def main():
 
     # 3) summary logs
     total_time = time.time() - start_time
-    succeeded = sum(1 for r in results if r.new is not None and r.deleted is not None)
-    failed = sum(1 for r in results if r.new is None and r.deleted is None)
+    succeeded = sum(1 for r in results if not r.error)
+    failed    = sum(1 for r in results if r.error)
 
-    changed_companies = sum(1 for r in results if r.new or r.deleted)
+    # Count runs that had any type of change, including reopened
+    changed_companies = sum(1 for r in results if r.new or r.deleted or (getattr(r, "reopened", {}) or {}))
 
     global_logger.info("📋 SUMMARY")
     global_logger.info(f"🏢 Ran scrapers: {len(results)} | 🔄 Changed: {changed_companies}")
     global_logger.info(f"✅ Succeeded: {succeeded}")
     global_logger.info(f"❌ Failed: {failed}")
     global_logger.info(f"⏱ Total Runtime: {total_time:.2f} seconds")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
