@@ -122,7 +122,7 @@ async def run_scraper(company_name, scraper_func, force_version=False) -> Scrape
         logger.info(f"📦 Previous: {len(previous_jobs)} | Current (after confirmation): {len(current_jobs_dict)}")
 
         # 3) Stability path (company-scoped) vs. regular diff
-        if STABILITY_ENABLED.get(company_name, False):
+        if STABILITY_ENABLED.get(company_name, True):
             new_job_objs, deleted_job_objs, quarantined_missing, reopened = apply_stability(
                 company_name=company_name,
                 base_data_path=BASE_DATA_PATH,
@@ -286,7 +286,7 @@ def build_digest(results, no_email: bool):
         return None
 
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    subject = f"🔥🐦‍🔥🔥 FireStorm 🧨🚒🔥🔥 is here, ({ts}) — New: {total_new}, Deleted: {total_deleted}, Reopened: {total_reopened}"
+    subject = f"Job Digest is here, ({ts}) — New: {total_new}, Deleted: {total_deleted}, Reopened: {total_reopened}"
     body = "\n".join(sections).strip()
     if len(body) > 190_000:
         body = body[:190_000] + "\n\n…(truncated)"
