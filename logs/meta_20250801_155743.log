@@ -1,8 +1,0 @@
-2025-08-01 15:57:43,049 - INFO - 🔍 Starting scraper for Meta...
-2025-08-01 15:57:43,049 - INFO - Starting Meta job scrape...
-2025-08-01 15:58:03,634 - WARNING - Parsing Json
-2025-08-01 15:58:07,152 - INFO - 🎉 Scraped 1325 Meta jobs.
-2025-08-01 15:58:07,156 - INFO - 🆕 1325 new jobs found for meta
-2025-08-01 15:58:07,156 - INFO - 📭 New Jobs Email alert skipped.
-2025-08-01 15:58:07,156 - INFO - ✅ No deleted jobs for meta
-2025-08-01 15:58:07,172 - INFO - ✅ Finished scraping meta

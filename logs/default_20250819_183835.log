@@ -1,6 +1,0 @@
-2025-08-19 18:38:35,927 - INFO - Starting Meta job scrape (union of both sort modes)…
-2025-08-19 18:38:37,761 - INFO - ▶️ Meta scrape mode sort_by_new=False
-2025-08-19 18:38:37,766 - INFO - ▶️ Meta scrape mode sort_by_new=True
-2025-08-19 18:38:38,905 - INFO - ✅ mode sort_by_new=True: got 1229 unique jobs
-2025-08-19 18:38:39,010 - INFO - ✅ mode sort_by_new=False: got 1225 unique jobs
-2025-08-19 18:38:39,011 - INFO - 🎉 Meta union: 1229 unique jobs (default=1225, new=1229)

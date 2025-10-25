@@ -1,3 +1,0 @@
-2025-08-01 16:11:48,960 - INFO - Starting Meta job scrape...
-2025-08-01 16:11:54,362 - DEBUG - {'id': '1290675399106063', 'title': 'Product Marketing Manager, Devices Go-To-Market', 'locations': ['Los Angeles, CA', 'Seattle, WA', 'New York, NY', 'San Francisco, CA'], 'teams': ['AR/VR'], 'sub_teams': ['Product Marketing Management']}
-2025-08-01 16:11:55,402 - INFO - 🎉 Scraped 1325 Meta jobs.
