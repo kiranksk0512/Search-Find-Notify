@@ -1,7 +1,6 @@
 import json
 import time
 import random
-import os
 import asyncio
 import urllib.parse
 import uuid
@@ -9,18 +8,12 @@ import hashlib
 import traceback
 from datetime import datetime
 from zoneinfo import ZoneInfo
-
+from core.decision import retry_and_decide
 from core.fetcher import post_form
 from core.logger import get_company_logger
 from core.meta_utils import extract_meta_tokens
 from models.meta_job import MetaJob
-from core.context import get_company  # ✅ add company context
-
-# performs a token refresh + one full re-scrape on anomaly (zero or “too few” jobs)
-
-# uses should_persist_jobs(...) inside get_jobs() to decide whether to skip S3 persist + SES notifications
-
-# surfaces should_persist and a short decision_reason back to the caller so your scheduler can branch cleanly
+from core.context import get_company 
 
 logger = get_company_logger()
 
@@ -281,26 +274,28 @@ async def fetch_all_pages_for_mode(tokens, *, sort_by_new: bool, scrape_id: str,
 
 # ----------------- persist guard helper -----------------
 
-def should_persist_jobs(meta_result: dict, min_expected_count: int = 50) -> bool:
-    """
-    Return False if this looks like a bad/empty scrape that would trash S3 and flood SES.
-    Tune `min_expected_count` to your comfort (Meta ~800 per your note).
-    """
+def should_persist_jobs(result: dict, min_expected_count: int = 50) -> tuple[bool, str]:
     company = get_company()
-    if not meta_result:
-        return False
-    if meta_result.get("anomalous_zero"):
-        logger.warning(f"[company={company}] [{meta_result.get('scrape_id','na')}] 🧯 anomalous_zero=True; skip persist/notify.")
-        return False
-    jobs = meta_result.get("jobs") or []
+
+    if not result:
+        return False, "no result"
+    
+    jobs = result.get("jobs") or []
+    
+    if result.get("anomalous_zero"):
+        logger.warning(f"[company={company}] [{result.get('scrape_id','na')}] 🧯 anomalous_zero=True; skip persist/notify.")
+        return False, "anomalous_zero"
+    
     if len(jobs) == 0:
-        logger.warning(f"[company={company}] [{meta_result.get('scrape_id','na')}] 🧯 zero jobs; skip persist/notify.")
-        return False
-    # guard against partial-site hiccups; only persist if reasonable volume
+        logger.warning(f"[company={company}] [{result.get('scrape_id','na')}] 🧯 zero jobs; skip persist/notify.")
+        return False, "zero_jobs"
+    
     if len(jobs) < min_expected_count:
-        logger.warning(f"[company={company}] [{meta_result.get('scrape_id','na')}] 🧯 Too few jobs ({len(jobs)}<{min_expected_count}); treating as partial outage; skip persist/notify.")
-        return False
-    return True
+        logger.warning(f"[company={company}] [{result.get('scrape_id','na')}] 🧯 Too few jobs ({len(jobs)}<{min_expected_count}); treating as partial outage; skip persist/notify.")
+        return False, f"too_few({len(jobs)}<{min_expected_count})"
+
+    return True, "ok"
+
 
 # ----------------- top-level: token refresh + decisioning -----------------
 
@@ -377,40 +372,14 @@ async def get_jobs(min_expected_count: int = 50):
     # First pass
     result = await _scrape_once(label="first-pass")
 
-    # Decide if we should treat as anomaly and refresh tokens + retry once
-    too_few = (len(result["jobs"]) < min_expected_count)
-    needs_retry = result["anomalous_zero"] or too_few
-
-    if needs_retry:
-        reason = "anomalous_zero" if result["anomalous_zero"] else f"too_few({len(result['jobs'])}<{min_expected_count})"
-        logger.warning(f"[company={company}] [{result['scrape_id']}] 🧯 {reason}; refreshing tokens & retrying once…")
-        # Second pass with fresh tokens (the helper already re-fetches tokens each call)
-        result_retry = await _scrape_once(label="retry-after-token-refresh")
-
-        # If retry is clearly better (>= first count), use it
-        if len(result_retry["jobs"]) >= len(result["jobs"]):
-            logger.info(f"[company={company}] [{result_retry['scrape_id']}] ✅ Retry improved/kept count "
-                        f"{len(result['jobs'])} -> {len(result_retry['jobs'])}; using retry result.")
-            result = result_retry
-        else:
-            logger.info(f"[company={company}] [{result['scrape_id']}] ⚠️ Retry did not improve count; keeping first result.")
-
-    # Final decision: should we persist/notify?
-    persist = should_persist_jobs(result, min_expected_count=min_expected_count)
-    decision_reason = "ok"
-    if not persist:
-        if result["anomalous_zero"]:
-            decision_reason = "anomalous_zero"
-        elif len(result["jobs"]) == 0:
-            decision_reason = "zero_jobs"
-        elif len(result["jobs"]) < min_expected_count:
-            decision_reason = f"too_few({len(result['jobs'])}<{min_expected_count})"
-
-    # Attach decision fields for the scheduler to act on
-    result["should_persist"] = persist
-    result["decision_reason"] = decision_reason
-
-    logger.info(f"[company={company}] [{result['scrape_id']}] 🧭 decision: should_persist={persist} reason={decision_reason} "
-                f"total={len(result['jobs'])} default={result['default_count']} new={result['new_count']}")
+    # Centralized anomaly guard + optional retry + decision
+    result = await retry_and_decide(
+        company=company,
+        logger=logger,
+        first_result=result,
+        retry_fn=lambda: _scrape_once(label="retry-after-token-refresh"),
+        min_expected_count=min_expected_count,
+        should_persist_fn=should_persist_jobs,  # your existing helper
+    )
 
     return result
