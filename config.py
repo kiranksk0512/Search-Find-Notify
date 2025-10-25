@@ -35,6 +35,7 @@ MAX_REFETCHES = 1              # how many extra passes to try
 # Which companies use the stability layer (consecutive-miss deletion + reopened tracking)
 STABILITY_ENABLED = {
     "microsoft": True,
+    "meta": True,
     # "netflix": False,
     # "apple": False,
 }

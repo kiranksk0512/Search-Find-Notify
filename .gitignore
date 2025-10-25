@@ -2,3 +2,5 @@ data/*.json
 .vscode
 **/__pycache__/
 logs/
+build/
+scraper.zip
