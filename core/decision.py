@@ -1,45 +1,50 @@
 from __future__ import annotations
-from typing import Callable, Awaitable, Optional, Dict, Any, Tuple
+from typing import Callable, Awaitable, Optional, Tuple
+from core.scrape_types import ScrapeResult
 
-Result = Dict[str, Any]
-RetryFn = Callable[[], Awaitable[Result]]
-ShouldPersistFn = Callable[[Result, int], Tuple[bool, str]]  # returns (should_persist, decision_reason)
+RetryFn = Callable[[], Awaitable[ScrapeResult]]
+ShouldPersistFn = Callable[[ScrapeResult, int], Tuple[bool, str]]
 
 async def retry_and_decide(
     *,
     company: str,
     logger,
-    first_result: Result,
+    first_result: ScrapeResult,
     retry_fn: Optional[RetryFn],
     min_expected_count: int,
     should_persist_fn: ShouldPersistFn,
-) -> Result:
+) -> ScrapeResult:
     result = first_result
 
-    too_few = len(result.get("jobs") or []) < min_expected_count
-    needs_retry = bool(result.get("anomalous_zero")) or too_few
+    too_few = len(result.jobs) < min_expected_count
+    needs_retry = result.anomalous_zero or too_few
 
     if needs_retry and retry_fn:
-        reason = "anomalous_zero" if result.get("anomalous_zero") else f"too_few({len(result.get('jobs') or [])}<{min_expected_count})"
-        logger.warning(f"[company={company}] [{result.get('scrape_id','na')}] 🧯 {reason}; retrying once…")
+        reason = (
+            "anomalous_zero"
+            if result.anomalous_zero
+            else f"too_few({len(result.jobs)}<{min_expected_count})"
+        )
+        logger.warning(f"[company={company}] [{result.scrape_id}] 🧯 {reason}; retrying once…")
 
         retry = await retry_fn()
-        if len(retry.get("jobs") or []) >= len(result.get("jobs") or []):
+        if len(retry.jobs) >= len(result.jobs):
             result = retry
         else:
-            logger.info(f"[company={company}] [{result.get('scrape_id','na')}] ⚠️ Retry did not improve count; keeping first result.")
+            logger.info(
+                f"[company={company}] [{result.scrape_id}] ⚠️ Retry did not improve; keeping original result."
+            )
 
-    should_persist, decision_reason = should_persist_fn(result, min_expected_count)
-    result["should_persist"] = should_persist
-    result["decision_reason"] = decision_reason
+    # Final decision
+    result.should_persist, result.decision_reason = should_persist_fn(result, min_expected_count)
 
-    # Optional logging of Meta-only counters if present (others will show 0)
-    stats = result.get("stats") or {}
+    stats = result.stats or {}
     dcnt = stats.get("default_count", 0)
     ncnt = stats.get("new_count", 0)
-
     logger.info(
-        f"[company={company}] [{result.get('scrape_id','na')}] 🧭 decision={decision_reason} "
-        f"persist={should_persist} total={len(result.get('jobs') or [])} default={dcnt} new={ncnt}"
+        f"[company={company}] [{result.scrape_id}] 🧭 decision={result.decision_reason} "
+        f"persist={result.should_persist} total={len(result.jobs)} "
+        f"default={dcnt} new={ncnt}"
     )
+
     return result

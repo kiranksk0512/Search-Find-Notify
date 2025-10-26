@@ -317,29 +317,32 @@ async def fetch_all_pages_for_mode(tokens: Dict[str, Any], *, sort_by_new: bool,
 # ----------------- persist guard helper -----------------
 
 
-def should_persist_jobs(result: Dict[str, Any], min_expected_count: int = 50) -> Tuple[bool, str]:
+def should_persist_jobs(result: ScrapeResult, min_expected_count: int = 50) -> Tuple[bool, str]:
     """
-    Return (should_persist, decision_reason).
-    - Meta-only "too few" threshold is configurable via min_expected_count.
+    Object-mode policy for Meta. Returns (should_persist, decision_reason).
     """
     company = get_company()
 
-    if not result:
-        return False, "no result"
-    
-    jobs = result.get("jobs") or []
-    
-    if result.get("anomalous_zero"):
-        logger.warning(f"[company={company}] [{result.get('scrape_id','na')}] 🧯 anomalous_zero=True; skip persist/notify.")
+    if result is None:
+        return False, "no_result"
+
+    # anomaly guard
+    if result.anomalous_zero:
+        logger.warning(f"[company={company}] [{result.scrape_id}] 🧯 anomalous_zero=True; skip persist/notify.")
         return False, "anomalous_zero"
-    
-    if len(jobs) == 0:
-        logger.warning(f"[company={company}] [{result.get('scrape_id','na')}] 🧯 zero jobs; skip persist/notify.")
+
+    jobs_count = len(result.jobs or [])
+
+    if jobs_count == 0:
+        logger.warning(f"[company={company}] [{result.scrape_id}] 🧯 zero jobs; skip persist/notify.")
         return False, "zero_jobs"
-    
-    if len(jobs) < min_expected_count:
-        logger.warning(f"[company={company}] [{result.get('scrape_id','na')}] 🧯 Too few jobs ({len(jobs)}<{min_expected_count}); treating as partial outage; skip persist/notify.")
-        return False, f"too_few({len(jobs)}<{min_expected_count})"
+
+    if jobs_count < min_expected_count:
+        logger.warning(
+            f"[company={company}] [{result.scrape_id}] 🧯 Too few jobs ({jobs_count}<{min_expected_count}); "
+            "treating as partial outage; skip persist/notify."
+        )
+        return False, f"too_few({jobs_count}<{min_expected_count})"
 
     return True, "ok"
 
@@ -373,13 +376,13 @@ async def get_jobs(min_expected_count: int = 50):
             logger.warning(
                 f"[company={company}] [{scrape_id}] 🚨 Critical tokens missing; skipping this attempt to trigger retry."
             )
-            return scrape_types(
+            return ScrapeResult(
                 jobs=[],
                 scrape_id=scrape_id,
                 anomalous_zero=True,
                 stats={"default_count": 0, "new_count": 0},
                 meta={"note": "critical tokens missing"},
-            ).to_dict()
+            )
 
         logger.info(
             f"[company={company}] [{scrape_id}] 🔑 tokens("
@@ -418,7 +421,7 @@ async def get_jobs(min_expected_count: int = 50):
             anomalous_zero=anomalous_zero,
             stats={"default_count": len(jobs_default), "new_count": len(jobs_new)},
             meta={"mode": "union"},
-        ).to_dict()
+        )
 
     # First pass
     first = await _scrape_once(label="first-pass")
@@ -428,9 +431,9 @@ async def get_jobs(min_expected_count: int = 50):
         company=company,
         logger=logger,
         first_result=first,
-        retry_fn=lambda: _scrape_once(label="retry-after-token-refresh"),
+        retry_fn=lambda: _scrape_once("retry-after-token-refresh"),
         min_expected_count=min_expected_count,
-        should_persist_fn=should_persist_jobs,  # returns (bool, reason)
+        should_persist_fn=should_persist_jobs,
     )
 
     return decided
