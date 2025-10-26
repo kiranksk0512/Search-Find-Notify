@@ -66,8 +66,9 @@ async def run_scraper(company_name, scraper_func, force_version=False) -> Scrape
             current_jobs_list = raw_result.get("jobs") or []
             should_persist = raw_result.get("should_persist", True)
             decision_reason = raw_result.get("decision_reason", "ok")
-            default_count = raw_result.get("default_count", None)
-            new_count = raw_result.get("new_count", None)
+            stats = raw_result.get("stats") or {}
+            default_count = stats.get("default_count")
+            new_count = stats.get("new_count")
 
             logger.info(
                 f"🧭 Decision from scraper: should_persist={should_persist} "
