@@ -1,8 +1,14 @@
+import asyncio
 import html
+import random
 from datetime import datetime
+from typing import Optional, Dict, Any, List
 from zoneinfo import ZoneInfo
 from core.logger import get_company_logger
 from core.fetcher import get_json
+from core.context import get_company
+from core.scrape_types import ScrapeResult
+from core.decision import retry_and_decide
 from models.netflix_job import NetflixJob
 
 logger = get_company_logger("netflix")
@@ -26,7 +32,26 @@ HEADERS = {
     ),
 }
 
-async def get_jobs():
+
+def should_persist_jobs(result: ScrapeResult, min_expected_count: int):
+    company = get_company()
+
+    if not result or not result.jobs:
+        return False, "zero_jobs"
+
+    cnt = len(result.jobs)
+    if cnt < min_expected_count:
+        return False, f"too_few({cnt}<{min_expected_count})"
+
+    return True, "ok"
+
+
+async def _scrape_once(label: str, min_expected_count: int = 20) -> ScrapeResult:
+    company = get_company()
+    scrape_id = label
+
+    await asyncio.sleep(random.uniform(0, 2.0))
+
     page = 0
     all_jobs = []
     seen_ids = set()
@@ -48,7 +73,7 @@ async def get_jobs():
             ('start', page * 10),
         ]
 
-        logger.info(f"📦 Fetching page {page} with Teams: ['Engineering', 'Data & Insights', 'Product Design', 'Engineering Operations']")
+        logger.info(f"[company={company}] [{scrape_id}] ▶️  Fetching Page {page} Teams: ['Engineering', 'Data & Insights', 'Product Design', 'Engineering Operations']")
 
         data = await get_json(BASE_URL, headers=HEADERS, params=params)
         if not data:
@@ -61,7 +86,7 @@ async def get_jobs():
         if not job_list:
             consecutive_empty_pages += 1
             if consecutive_empty_pages >= 3:
-                logger.warning("⚠️ Stopping: 3 consecutive empty pages.")
+                logger.warning(f"[company={company}] [{scrape_id}] ⚠️ stopping after {consecutive_empty_pages} empty pages")
                 break
             page += 1
             continue
@@ -102,6 +127,30 @@ async def get_jobs():
             ))
 
         page += 1
+        await asyncio.sleep(random.uniform(0.7, 2.0))
 
-    logger.info(f"🎉 Total Netflix jobs found: {len(all_jobs)}")
-    return all_jobs
+    logger.info(f"[company={company}] [{scrape_id}] ✅ Found total: {len(all_jobs)} jobs")
+
+    return ScrapeResult(
+        jobs=all_jobs,
+        scrape_id=scrape_id,
+        stats={"count": len(all_jobs)},
+        meta={"label": label}
+    )
+
+
+async def get_jobs(min_expected_count: int = 2) -> ScrapeResult:
+    company = get_company()
+
+    first = await _scrape_once("first-pass", min_expected_count=min_expected_count)
+
+    decided = await retry_and_decide(
+        company=company,
+        logger=logger,
+        first_result=first,
+        retry_fn=lambda: _scrape_once("retry", min_expected_count),
+        min_expected_count=min_expected_count,
+        should_persist_fn=should_persist_jobs,
+    )
+
+    return decided

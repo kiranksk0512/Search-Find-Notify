@@ -1,13 +1,16 @@
 import asyncio
 import random
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Dict, Any, List, Optional
-
 from zoneinfo import ZoneInfo
 
 from core.fetcher import get_json_resilient
 from core.logger import get_company_logger
+from core.context import get_company
+from core.scrape_types import ScrapeResult
+from core.decision import retry_and_decide
+
 from models.microsoft_job import MicrosoftJob
 
 
@@ -163,8 +166,26 @@ def _extract_total(d: Dict[str, Any]) -> Optional[int]:
     except Exception:
         return None
 
+# ---------------------------- DECISION FN (Microsoft-only rules) ----------------------------
+def should_persist_jobs(result: ScrapeResult, min_expected_count: int):
+    company = get_company()
 
-async def get_jobs() -> List[MicrosoftJob]:
+    if not result or not result.jobs:
+        return False, "zero_jobs"
+
+    total = len(result.jobs)
+    if total < min_expected_count:
+        return False, f"too_few({total}<{min_expected_count})"
+
+    return True, "ok"
+
+
+# ---------------------------- TOP LEVEL ENTRY ----------------------------
+async def _scrape_once(label: str, min_expected_count: int = 50) -> ScrapeResult:
+    company = get_company()
+    run_id = str(uuid.uuid4())[:8]
+    logger.info(f"[company={company}] [{run_id}] ▶️ Microsoft scrape ({label})")
+
     jobs: List[MicrosoftJob] = []
     seen_ids: set[str] = set()
 
@@ -172,7 +193,7 @@ async def get_jobs() -> List[MicrosoftJob]:
     logger.info("Entered Microsoft get_jobs()")
 
     for exp_track in EXPERIENCE_TRACKS:
-        logger.info(f"[Microsoft] Scraping experience track: {exp_track}")
+        logger.info(f"[company={company}] [{run_id}] 🎯 Track={exp_track}")
         page = 1
         empty_streak = 0
         last_sig: Optional[tuple] = None
@@ -250,4 +271,27 @@ async def get_jobs() -> List[MicrosoftJob]:
             await asyncio.sleep(random.uniform(1, 4))
 
     logger.info(f"🎉 [Microsoft] Found total across all tracks: {len(jobs)} jobs")
-    return jobs
+
+    return ScrapeResult(
+        jobs=jobs,
+        scrape_id=run_id,
+        stats={"total": len(jobs)},
+        meta={"label": label},
+    )
+
+
+async def get_jobs(min_expected_count: int = 50) -> ScrapeResult:
+    company = get_company()
+
+    first = await _scrape_once("first-pass", min_expected_count=min_expected_count)
+
+    decided = await retry_and_decide(
+        company=company,
+        logger=logger,
+        first_result=first,
+        retry_fn=lambda: _scrape_once("retry", min_expected_count),
+        min_expected_count=min_expected_count,
+        should_persist_fn=should_persist_jobs,
+    )
+
+    return decided

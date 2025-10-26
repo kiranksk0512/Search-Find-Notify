@@ -9,6 +9,10 @@ from urllib.parse import urlencode, quote  # 🔹 for full URL logging
 
 from core.fetcher import get_json          # resilient async GET (you already have this)
 from core.logger import get_company_logger
+from core.context import get_company
+from core.scrape_types import ScrapeResult
+from core.decision import retry_and_decide
+
 from models.oracle_job import OracleJob    # your existing dataclass/pydantic model
 
 try:
@@ -284,7 +288,18 @@ async def _page_through(mode_name: str,
     return jobs
 
 
-async def get_jobs() -> List[OracleJob]:
+def should_persist_jobs(result: ScrapeResult, min_expected_count: int):
+    company = get_company()
+
+    cnt = len(result.jobs or [])
+    if cnt == 0:
+        return False, "zero_jobs"
+    if cnt < min_expected_count:
+        return False, f"too_few({cnt}<{min_expected_count})"
+    return True, "ok"
+
+
+async def _scrape_once(label: str, min_expected_count: int) -> ScrapeResult:
     """
     Strategy:
       1) CAT + LOC + YEARS     (finder-paging, lastSelected=CATEGORIES)
@@ -292,6 +307,7 @@ async def get_jobs() -> List[OracleJob]:
       3) YEARS only            (finder-paging, lastSelected=AttributeChar6)
       4) SITE_ONLY             (site-only with larger page)
     """
+    company = get_company()
     await asyncio.sleep(random.uniform(0, 4.0))
     logger.info("Entered Oracle get_jobs()")
 
@@ -327,7 +343,7 @@ async def get_jobs() -> List[OracleJob]:
         jobs = await _page_through("CAT+LOC+YEARS (finder-paging, lastSelected=CATEGORIES)", _p1, PAGE_SIZE_FILTERED)
         if jobs:
             logger.info(f"🎉 Oracle: returning {len(jobs)} jobs from CAT+LOC+YEARS.")
-            return jobs
+            return ScrapeResult(jobs, label, meta={"mode": "CAT+LOC+YEARS"})
         logger.warning("[Oracle] CAT+LOC+YEARS returned nothing; falling back to LOC+YEARS...")
 
     # --- 2) LOC + YEARS ---
@@ -344,7 +360,7 @@ async def get_jobs() -> List[OracleJob]:
     jobs = await _page_through("LOC+YEARS (finder-paging, lastSelected=AttributeChar6)", _p2, PAGE_SIZE_FILTERED)
     if jobs:
         logger.info(f"🎉 Oracle: returning {len(jobs)} jobs from LOC+YEARS.")
-        return jobs
+        return ScrapeResult(jobs, label, meta={"mode": "LOC+YEARS"})
     logger.warning("[Oracle] LOC+YEARS returned nothing; falling back to YEARS only...")
 
     # --- 3) YEARS only ---
@@ -361,7 +377,7 @@ async def get_jobs() -> List[OracleJob]:
     jobs = await _page_through("YEARS only (finder-paging, lastSelected=AttributeChar6)", _p3, PAGE_SIZE_FILTERED)
     if jobs:
         logger.info(f"🎉 Oracle: returning {len(jobs)} jobs from YEARS only.")
-        return jobs
+        return ScrapeResult(jobs, label, meta={"mode": "YEARS"})
     logger.warning("[Oracle] YEARS only returned nothing; falling back to SITE_ONLY...")
 
     # --- 4) SITE_ONLY ---
@@ -370,4 +386,21 @@ async def get_jobs() -> List[OracleJob]:
 
     jobs = await _page_through("SITE_ONLY (broad)", _p4, PAGE_SIZE_SITE_ONLY)
     logger.info(f"🎉 Oracle: returning {len(jobs)} jobs from SITE_ONLY.")
-    return jobs
+    return ScrapeResult(jobs, label, meta={"mode": "SITE_ONLY"})
+
+
+async def get_jobs(min_expected_count: int = 20) -> ScrapeResult:
+    company = get_company()
+
+    first = await _scrape_once("first-pass", min_expected_count)
+
+    decided = await retry_and_decide(
+        company=company,
+        logger=logger,
+        first_result=first,
+        retry_fn=lambda: _scrape_once("retry", min_expected_count),
+        min_expected_count=min_expected_count,
+        should_persist_fn=should_persist_jobs,
+    )
+
+    return decided
