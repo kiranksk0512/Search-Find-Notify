@@ -204,12 +204,16 @@ async def get_jobs(min_expected_count: int = 2):
     page = 1
     all_jobs: List[KiranBlackRockJob] = []
     seen = set()
-    total_pages = None
+    empty_streak = 0
 
     while True:
         fetched = await _fetch_page_text(page)
         if not fetched:
-            break
+            empty_streak += 1
+            if empty_streak >= 3:
+                break
+            page += 1
+            continue
 
         body, req_url = fetched
 
@@ -220,24 +224,28 @@ async def get_jobs(min_expected_count: int = 2):
 
         # If JSON-wrapped, extract the HTML; else use body as HTML
         html = _maybe_extract_html_from_json(body) or body
-
-        if total_pages is None:
-            total_pages = _extract_total_pages_from_html(html)
-
         parsed = _parse_jobs_from_html(html)
         new = [j for j in parsed if j.job_id not in seen]
         for j in new:
             seen.add(j.job_id)
         all_jobs.extend(new)
 
-        logger.info(f"[kiranblackrock] page={page} added={len(new)} total={len(all_jobs)} (of ~{total_pages or '?'})")
+        logger.info(f"[kiranblackrock] page={page} added={len(new)} total={len(all_jobs)}")
 
-        if (total_pages and page >= total_pages) or not parsed:
+        # ✅ no-progress detection
+        if len(new) == 0:
+            empty_streak += 1
+        else:
+            empty_streak = 0
+
+        if empty_streak >= 3:
+            logger.info("[kiranblackrock] stopping after 3 consecutive no-progress pages.")
             break
 
         page += 1
         await asyncio.sleep(0.5)
 
+    # ✅ unify output with ScrapeResult convention
     if len(all_jobs) == 0:
         return {"jobs": [], "should_persist": False, "decision_reason": "zero_jobs",
                 "default_count": 0, "new_count": 0}
