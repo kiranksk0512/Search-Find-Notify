@@ -247,13 +247,17 @@ async def get_jobs(min_expected_count: int = 2):
 
     # ✅ unify output with ScrapeResult convention
     if len(all_jobs) == 0:
+        logger.warning(f"[kiranblackrock] END :: zero jobs retrieved ")
         return {"jobs": [], "should_persist": False, "decision_reason": "zero_jobs",
                 "default_count": 0, "new_count": 0}
 
     if len(all_jobs) < min_expected_count:
+        logger.warning(f"[kiranblackrock]  END :: total jobs retrieved={len(all_jobs)} less than min_expected_count= {min_expected_count}")
         return {"jobs": all_jobs, "should_persist": False,
                 "decision_reason": f"too_few({len(all_jobs)}<{min_expected_count})",
                 "default_count": len(all_jobs), "new_count": 0}
+    
+    logger.info(f"[kiranblackrock] END :: total jobs retrieved={len(all_jobs)}")
 
     return {"jobs": all_jobs, "should_persist": True, "decision_reason": "ok",
             "default_count": len(all_jobs), "new_count": 0}
