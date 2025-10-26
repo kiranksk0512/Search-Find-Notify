@@ -9,6 +9,9 @@ async def extract_google_tokens_and_cookies():
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
     }
 
+    html = ""
+    cookies_dict = {}
+    raw_cookie_header = ""
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as response:
             html = await response.text()
@@ -21,28 +24,40 @@ async def extract_google_tokens_and_cookies():
     # Extract rpcids from AF_dataServiceRequests
     rpcids = None
     for script in scripts:
-        if "AF_dataServiceRequests" in script.text:
-            match = re.search(r"AF_dataServiceRequests\s*=\s*{.*?'ds:1'\s*:\s*{[^}]*?id\s*:\s*'([^']+)'", script.text, re.DOTALL)
-            if match:
-                rpcids = match.group(1)
-            else:
-                print("❌ Couldn't extract rpcids from AF_dataServiceRequests")
-            break
+        txt = script.string or script.text or ""
+        if "AF_dataServiceRequests" not in txt:
+            continue
+        m = re.search(
+            r"AF_dataServiceRequests\s*=\s*{.*?'ds:1'\s*:\s*{[^}]*?id\s*:\s*'([^']+)'",
+            txt,
+            re.DOTALL,
+        )
+        if m:
+            rpcids = m.group(1)
+        break
 
-    # Extract f.sid, bl, at from WIZ_global_data
+    # Extract f.sid (FdrFJe), bl (cfb2h), at (SNlM0e) from WIZ_global_data
     f_sid = bl = at = None
     for script in scripts:
-        if "WIZ_global_data" in script.text:
-            json_match = re.search(r"WIZ_global_data\s*=\s*({.*?});", script.text, re.DOTALL)
-            if json_match:
-                try:
-                    data = json.loads(json_match.group(1))
-                    f_sid = data.get("FdrFJe")
-                    bl = data.get("cfb2h")
-                    at = data.get("SNlM0e")  # Optional
-                except json.JSONDecodeError:
-                    print("❌ Failed to parse WIZ_global_data JSON")
-            break
+        txt = script.string or script.text or ""
+        if "WIZ_global_data" not in txt:
+            continue
+        m = re.search(r"WIZ_global_data\s*=\s*({.*?});", txt, re.DOTALL)
+        if not m:
+            continue
+        blob = m.group(1)
+        data = None
+        try:
+            data = json.loads(blob)
+        except json.JSONDecodeError:
+            # Tolerate single quotes / unquoted keys
+            blob2 = re.sub(r"(\w+)\s*:", r'"\1":', blob)
+            blob2 = blob2.replace("'", '"')
+            data = json.loads(blob2)
+        f_sid = (data or {}).get("FdrFJe")
+        bl = (data or {}).get("cfb2h")
+        at = (data or {}).get("SNlM0e")
+        break
 
     print("📌 Extracted Tokens:")
     print(f"  • rpcids : {rpcids}")

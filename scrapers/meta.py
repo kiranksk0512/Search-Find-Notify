@@ -1,26 +1,26 @@
+from __future__ import annotations
+
 import json
 import time
 import random
-import os
 import asyncio
 import urllib.parse
 import uuid
 import hashlib
 import traceback
 from datetime import datetime
+from typing import Dict, Any, Optional, Tuple
 from zoneinfo import ZoneInfo
 
 from core.fetcher import post_form
 from core.logger import get_company_logger
 from core.meta_utils import extract_meta_tokens
 from models.meta_job import MetaJob
-from core.context import get_company  # ✅ add company context
+from core.context import get_company
 
-# performs a token refresh + one full re-scrape on anomaly (zero or “too few” jobs)
-
-# uses should_persist_jobs(...) inside get_jobs() to decide whether to skip S3 persist + SES notifications
-
-# surfaces should_persist and a short decision_reason back to the caller so your scheduler can branch cleanly
+# Centralized result container + decision helper
+from core.scrape_types import ScrapeResult
+from core.decision import retry_and_decide
 
 logger = get_company_logger()
 
@@ -61,8 +61,10 @@ def _mask(v, keep: int = 4) -> str:
     return f"{s[:keep]}…{len(s)}"
 
 
-def convert_to_edt(utc_timestamp):
+def convert_to_edt(utc_timestamp: Optional[str]) -> str:
     try:
+        if not utc_timestamp:
+            return "Unknown"
         dt_utc = datetime.fromisoformat(utc_timestamp.replace("Z", "+00:00"))
         dt_edt = dt_utc.astimezone(ZoneInfo("America/New_York"))
         return dt_edt.strftime("%b %d, %Y %I:%M %p %Z")
@@ -71,7 +73,8 @@ def convert_to_edt(utc_timestamp):
 
 # ----------------- payload & parsing -----------------
 
-def get_payload(tokens, *, sort_by_new=False, after_cursor=None, req_id="1"):
+
+def get_payload(tokens: Dict[str, Any], *, sort_by_new: bool = False, after_cursor: Optional[str] = None, req_id: str = "1"):
     variables = {
         "search_input": {
             "q": None,
@@ -118,10 +121,13 @@ def get_payload(tokens, *, sort_by_new=False, after_cursor=None, req_id="1"):
 
     return urllib.parse.urlencode(payload_dict), variables
 
-def parse_jobs(data, *, scrape_id: str, mode: bool, page: int):
+
+def parse_jobs(data: Dict[str, Any], *, scrape_id: str, mode: bool, page: int):
     company = get_company()
     if not isinstance(data, dict):
-        logger.error(f"[company={company}] [{scrape_id}] ❌ Non-dict JSON on parse (mode={mode} page={page}) type={type(data)}")
+        logger.error(
+            f"[company={company}] [{scrape_id}] ❌ Non-dict JSON on parse (mode={mode} page={page}) type={type(data)}"
+        )
         return []
 
     errors = data.get("errors")
@@ -132,7 +138,9 @@ def parse_jobs(data, *, scrape_id: str, mode: bool, page: int):
     node = root.get("job_search_with_featured_jobs", {})
     all_jobs = node.get("all_jobs", [])
     if not isinstance(all_jobs, list):
-        logger.warning(f"[company={company}] [{scrape_id}] ⚠️ Unexpected all_jobs type: {type(all_jobs)} (mode={mode} page={page})")
+        logger.warning(
+            f"[company={company}] [{scrape_id}] ⚠️ Unexpected all_jobs type: {type(all_jobs)} (mode={mode} page={page})"
+        )
         all_jobs = []
 
     jobs = []
@@ -146,25 +154,39 @@ def parse_jobs(data, *, scrape_id: str, mode: bool, page: int):
         posted = convert_to_edt(job.get("listed_on", ""))
 
         if not job_id:
-            logger.debug(f"[company={company}] [{scrape_id}] ℹ️ Skipping job without id (mode={mode} page={page}) raw={job}")
+            logger.debug(
+                f"[company={company}] [{scrape_id}] ℹ️ Skipping job without id (mode={mode} page={page}) raw={job}"
+            )
             continue
 
         jobs.append(MetaJob(
-            job_id=job_id,
-            title=title,
-            url=url,
-            location=location,
-            team=teams,
-            sub_teams=sub_teams,
-            date_posted=posted
-        ))
+                job_id=job_id,
+                title=title,
+                url=url,
+                location=location,
+                team=teams,
+                sub_teams=sub_teams,
+                date_posted=posted,
+            )
+        )
 
     logger.info(f"[company={company}] [{scrape_id}] 🧩 Parsed jobs: {len(jobs)} (mode={mode} page={page})")
     return jobs
 
 # ----------------- network page fetch -----------------
 
-async def _fetch_page(tokens, *, sort_by_new: bool, after_cursor, req_id: str, scrape_id: str, page: int, attempt: int, ua: str):
+
+async def _fetch_page(
+    tokens: Dict[str, Any],
+    *,
+    sort_by_new: bool,
+    after_cursor: Optional[str],
+    req_id: str,
+    scrape_id: str,
+    page: int,
+    attempt: int,
+    ua: str,
+):
     company = get_company()
     HEADERS = {
         'accept': '*/*',
@@ -212,7 +234,8 @@ async def _fetch_page(tokens, *, sort_by_new: bool, after_cursor, req_id: str, s
         )
         return None, HEADERS
 
-async def fetch_all_pages_for_mode(tokens, *, sort_by_new: bool, scrape_id: str, ua: str):
+
+async def fetch_all_pages_for_mode(tokens: Dict[str, Any], *, sort_by_new: bool, scrape_id: str, ua: str):
     company = get_company()
     logger.info(f"[company={company}] [{scrape_id}] ▶️ Meta scrape mode sort_by_new={sort_by_new}")
     collected = []
@@ -229,25 +252,35 @@ async def fetch_all_pages_for_mode(tokens, *, sort_by_new: bool, scrape_id: str,
         headers_used = None
         for attempt in range(1, max_retries + 1):
             json_data, headers_used = await _fetch_page(
-                tokens, sort_by_new=sort_by_new, after_cursor=after_cursor,
-                req_id=req_id, scrape_id=scrape_id, page=page, attempt=attempt, ua=ua
+                tokens,
+                sort_by_new=sort_by_new,
+                after_cursor=after_cursor,
+                req_id=req_id,
+                scrape_id=scrape_id,
+                page=page,
+                attempt=attempt,
+                ua=ua,
             )
             if json_data:
                 break
-            # backoff
-            if attempt < max_retries:                   # <-- add this guard
+            if attempt < max_retries:
                 sleep_s = random.uniform(1.0, 2.0) * attempt
-                logger.warning(f"[company={company}] [{scrape_id}] 🔁 Retry (mode={sort_by_new} page={page}) in {sleep_s:.1f}s…")
+                logger.warning(
+                    f"[company={company}] [{scrape_id}] 🔁 Retry (mode={sort_by_new} page={page}) in {sleep_s:.1f}s…"
+                )
                 await asyncio.sleep(sleep_s)
 
-
         if not json_data:
-            logger.error(f"[company={company}] [{scrape_id}] ❌ Empty/failed GraphQL response after retries (mode={sort_by_new} page={page}).")
+            logger.error(
+                f"[company={company}] [{scrape_id}] ❌ Empty/failed GraphQL response after retries (mode={sort_by_new} page={page})."
+            )
             break
 
         # sanity check for GraphQL shape
         if "data" not in json_data and "errors" not in json_data:
-            logger.warning(f"[company={company}] [{scrape_id}] ⚠️ Unexpected JSON shape (no data/errors). Will stop paging. (mode={sort_by_new} page={page})")
+            logger.warning(
+                f"[company={company}] [{scrape_id}] ⚠️ Unexpected JSON shape (no data/errors). Will stop paging. (mode={sort_by_new} page={page})"
+            )
             break
 
         jobs = parse_jobs(json_data, scrape_id=scrape_id, mode=sort_by_new, page=page)
@@ -257,17 +290,19 @@ async def fetch_all_pages_for_mode(tokens, *, sort_by_new: bool, scrape_id: str,
         for j in new:
             seen_ids.add(j.job_id)
         collected.extend(new)
-        logger.info(f"[company={company}] [{scrape_id}] 📦 Page {page} added {len(new)} new (deduped {len(jobs) - len(new)}), total={len(collected)} (mode={sort_by_new})")
+        logger.info(
+            f"[company={company}] [{scrape_id}] 📦 Page {page} added {len(new)} new (deduped {len(jobs) - len(new)}), total={len(collected)} (mode={sort_by_new})"
+        )
 
         # page_info navigation
-        page_info = (json_data.get("data", {})
-                               .get("job_search_with_featured_jobs", {})
-                               .get("page_info", {}))
+        page_info = (json_data.get("data", {}).get("job_search_with_featured_jobs", {}).get("page_info", {}))
         has_next = bool(page_info.get("has_next_page"))
         end_cursor = page_info.get("end_cursor")
         end_cursor_hash = _hash_short(end_cursor) if end_cursor else "none"
 
-        logger.debug(f"[company={company}] [{scrape_id}] 🔎 page_info(has_next={has_next}, end_cursor={end_cursor_hash}) (mode={sort_by_new} page={page})")
+        logger.debug(
+            f"[company={company}] [{scrape_id}] 🔎 page_info(has_next={has_next}, end_cursor={end_cursor_hash}) (mode={sort_by_new} page={page})"
+        )
 
         if has_next and end_cursor:
             after_cursor = end_cursor
@@ -281,44 +316,55 @@ async def fetch_all_pages_for_mode(tokens, *, sort_by_new: bool, scrape_id: str,
 
 # ----------------- persist guard helper -----------------
 
-def should_persist_jobs(meta_result: dict, min_expected_count: int = 50) -> bool:
+
+def should_persist_jobs(result: ScrapeResult, min_expected_count: int = 50) -> Tuple[bool, str]:
     """
-    Return False if this looks like a bad/empty scrape that would trash S3 and flood SES.
-    Tune `min_expected_count` to your comfort (Meta ~800 per your note).
+    Object-mode policy for Meta. Returns (should_persist, decision_reason).
     """
     company = get_company()
-    if not meta_result:
-        return False
-    if meta_result.get("anomalous_zero"):
-        logger.warning(f"[company={company}] [{meta_result.get('scrape_id','na')}] 🧯 anomalous_zero=True; skip persist/notify.")
-        return False
-    jobs = meta_result.get("jobs") or []
-    if len(jobs) == 0:
-        logger.warning(f"[company={company}] [{meta_result.get('scrape_id','na')}] 🧯 zero jobs; skip persist/notify.")
-        return False
-    # guard against partial-site hiccups; only persist if reasonable volume
-    if len(jobs) < min_expected_count:
-        logger.warning(f"[company={company}] [{meta_result.get('scrape_id','na')}] 🧯 Too few jobs ({len(jobs)}<{min_expected_count}); treating as partial outage; skip persist/notify.")
-        return False
-    return True
+
+    if result is None:
+        return False, "no_result"
+
+    # anomaly guard
+    if result.anomalous_zero:
+        logger.warning(f"[company={company}] [{result.scrape_id}] 🧯 anomalous_zero=True; skip persist/notify.")
+        return False, "anomalous_zero"
+
+    jobs_count = len(result.jobs or [])
+
+    if jobs_count == 0:
+        logger.warning(f"[company={company}] [{result.scrape_id}] 🧯 zero jobs; skip persist/notify.")
+        return False, "zero_jobs"
+
+    if jobs_count < min_expected_count:
+        logger.warning(
+            f"[company={company}] [{result.scrape_id}] 🧯 Too few jobs ({jobs_count}<{min_expected_count}); "
+            "treating as partial outage; skip persist/notify."
+        )
+        return False, f"too_few({jobs_count}<{min_expected_count})"
+
+    return True, "ok"
+
 
 # ----------------- top-level: token refresh + decisioning -----------------
 
+
 async def get_jobs(min_expected_count: int = 50):
     """
-    Returns:
+    Returns a dict compatible with existing callers:
       {
         "jobs": [MetaJob, ...],
         "scrape_id": str,
         "anomalous_zero": bool,
-        "should_persist": bool,           # ✅ use this in your scheduler to skip S3/SES
-        "decision_reason": str,           # ✅ short reason for the decision
-        "default_count": int,
-        "new_count": int,
-    }
+        "should_persist": bool,
+        "decision_reason": str,
+        "stats": {"default_count": int, "new_count": int},  # Meta-only extras
+        "meta": {...}
+      }
     """
     company = get_company()
-    
+
     async def _scrape_once(label: str):
         ua = random.choice(USER_AGENTS)
         scrape_id = str(uuid.uuid4())[:8]
@@ -327,14 +373,17 @@ async def get_jobs(min_expected_count: int = 50):
         tokens = extract_meta_tokens() or {}
         critical_missing = not (tokens.get("lsd") and tokens.get("__hsi") and tokens.get("__rev"))
         if critical_missing:
-            logger.warning(f"[company={company}] [{scrape_id}] 🚨 Critical tokens missing; skipping this attempt to trigger retry.")
-            return {
-                "jobs": [],
-                "scrape_id": scrape_id,
-                "anomalous_zero": True,
-                "default_count": 0,
-                "new_count": 0,
-            }
+            logger.warning(
+                f"[company={company}] [{scrape_id}] 🚨 Critical tokens missing; skipping this attempt to trigger retry."
+            )
+            return ScrapeResult(
+                jobs=[],
+                scrape_id=scrape_id,
+                anomalous_zero=True,
+                stats={"default_count": 0, "new_count": 0},
+                meta={"note": "critical tokens missing"},
+            )
+
         logger.info(
             f"[company={company}] [{scrape_id}] 🔑 tokens("
             f"__rev={_mask(tokens.get('__rev'))}, "
@@ -351,7 +400,7 @@ async def get_jobs(min_expected_count: int = 50):
             fetch_all_pages_for_mode(tokens, sort_by_new=True,  scrape_id=scrape_id, ua=ua),
         )
 
-        by_id = {}
+        by_id: Dict[str, MetaJob] = {}
         for j in jobs_default + jobs_new:
             if j.job_id not in by_id:
                 by_id[j.job_id] = j
@@ -366,51 +415,25 @@ async def get_jobs(min_expected_count: int = 50):
         if anomalous_zero:
             logger.warning(f"[company={company}] [{scrape_id}] 🚨 Anomalous ZERO across both modes – likely transient.")
 
-        return {
-            "jobs": all_jobs,
-            "scrape_id": scrape_id,
-            "anomalous_zero": anomalous_zero,
-            "default_count": len(jobs_default),
-            "new_count": len(jobs_new),
-        }
+        return ScrapeResult(
+            jobs=all_jobs,
+            scrape_id=scrape_id,
+            anomalous_zero=anomalous_zero,
+            stats={"default_count": len(jobs_default), "new_count": len(jobs_new)},
+            meta={"mode": "union"},
+        )
 
     # First pass
-    result = await _scrape_once(label="first-pass")
+    first = await _scrape_once(label="first-pass")
 
-    # Decide if we should treat as anomaly and refresh tokens + retry once
-    too_few = (len(result["jobs"]) < min_expected_count)
-    needs_retry = result["anomalous_zero"] or too_few
+    # Centralized anomaly guard + optional retry + final decision
+    decided = await retry_and_decide(
+        company=company,
+        logger=logger,
+        first_result=first,
+        retry_fn=lambda: _scrape_once("retry-after-token-refresh"),
+        min_expected_count=min_expected_count,
+        should_persist_fn=should_persist_jobs,
+    )
 
-    if needs_retry:
-        reason = "anomalous_zero" if result["anomalous_zero"] else f"too_few({len(result['jobs'])}<{min_expected_count})"
-        logger.warning(f"[company={company}] [{result['scrape_id']}] 🧯 {reason}; refreshing tokens & retrying once…")
-        # Second pass with fresh tokens (the helper already re-fetches tokens each call)
-        result_retry = await _scrape_once(label="retry-after-token-refresh")
-
-        # If retry is clearly better (>= first count), use it
-        if len(result_retry["jobs"]) >= len(result["jobs"]):
-            logger.info(f"[company={company}] [{result_retry['scrape_id']}] ✅ Retry improved/kept count "
-                        f"{len(result['jobs'])} -> {len(result_retry['jobs'])}; using retry result.")
-            result = result_retry
-        else:
-            logger.info(f"[company={company}] [{result['scrape_id']}] ⚠️ Retry did not improve count; keeping first result.")
-
-    # Final decision: should we persist/notify?
-    persist = should_persist_jobs(result, min_expected_count=min_expected_count)
-    decision_reason = "ok"
-    if not persist:
-        if result["anomalous_zero"]:
-            decision_reason = "anomalous_zero"
-        elif len(result["jobs"]) == 0:
-            decision_reason = "zero_jobs"
-        elif len(result["jobs"]) < min_expected_count:
-            decision_reason = f"too_few({len(result['jobs'])}<{min_expected_count})"
-
-    # Attach decision fields for the scheduler to act on
-    result["should_persist"] = persist
-    result["decision_reason"] = decision_reason
-
-    logger.info(f"[company={company}] [{result['scrape_id']}] 🧭 decision: should_persist={persist} reason={decision_reason} "
-                f"total={len(result['jobs'])} default={result['default_count']} new={result['new_count']}")
-
-    return result
+    return decided

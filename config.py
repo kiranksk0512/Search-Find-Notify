@@ -23,7 +23,7 @@ BACKUP_RETENTION_DAYS = 7
 
 
 # Stability knobs
-MISS_THRESHOLD = 3          # consecutive runs missing before we call a job deleted
+MISS_THRESHOLD = 10          # consecutive runs missing before we call a job deleted
 REOPEN_GRACE_DAYS = 30      # if a job reappears within this, mark as reopened (informational)
 
 # Big-drop refetch

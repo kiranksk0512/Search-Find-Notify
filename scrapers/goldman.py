@@ -1,11 +1,17 @@
+from __future__ import annotations
+
 import asyncio
 import random
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from core.fetcher import post_json  # your existing resilient POST
+
+from core.fetcher import post_json
 from core.logger import get_company_logger
+from core.context import get_company
+from core.scrape_types import ScrapeResult
+from core.decision import retry_and_decide
 from models.goldman_job import GoldmanJob
 
 logger = get_company_logger()
@@ -23,7 +29,7 @@ USER_AGENTS = [
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.4 Safari/605.1.15",
 ]
 
-# We can request both tracks; if you prefer to split, run two passes like Microsoft.
+# We can request both tracks in one pass
 EXPERIENCES = ["EARLY_CAREER", "PROFESSIONAL"]
 
 # Basic failsafes
@@ -89,7 +95,10 @@ GS_FILTERS = [
     },
     {
         "filterCategoryType": "JOB_FUNCTION",
-        "filters": [{"filter": "Software Engineering", "subFilters": []}],
+        "filters": [{"filter": "Software Engineering", "subFilters": []}, 
+                    {"filter": "Systems Engineering", "subFilters": []},
+                    {"filter": "Technology Audit", "subFilters": []},
+                    {"filter": "Technology Products", "subFilters": []}],
     },
     {
         "filterCategoryType": "LOCATION",
@@ -158,34 +167,35 @@ def _extract_numeric_from_role_id(role_id: str) -> Optional[str]:
     return m.group(1) if m else None
 
 def _goldman_job_url(role_id: str, source_id: str) -> str:
-    # Prefer the canonical /roles/<sourceId> when available
+    # Prefer canonical /roles/<sourceId> when available
     if source_id:
         return f"{ROLES_BASE}{source_id}"
     # If no sourceId but roleId starts with digits, try that
     rid_num = _extract_numeric_from_role_id(role_id)
     if rid_num:
         return f"{ROLES_BASE}{rid_num}"
-    
-    # Last resort: send to the career wesbite
+    # Last resort: careers root
     return CAREERS_BASE
 
-def _fmt_primary_location(locs: list[dict]) -> str:
+
+def _fmt_primary_location(locs: List[Dict[str, Any]]) -> str:
     if not locs:
         return "N/A"
     prim = next((l for l in locs if l.get("primary")), None) or locs[0]
     return ", ".join([x for x in [prim.get("city"), prim.get("state"), prim.get("country")] if x])
 
-def _normalize_item(it: dict) -> GoldmanJob:
+
+def _normalize_item(it: Dict[str, Any]) -> GoldmanJob:
     role_id = it.get("roleId") or ""
     ext_src = (it.get("externalSource") or {}).get("sourceId") or ""
     job_id = ext_src or role_id
 
-    # populate current EST time as date_posted
+    # Use "now" (EST/EDT) for date_posted; GS doesn't expose posted timestamp here
     est_now = datetime.now(ZoneInfo("America/New_York")).strftime("%b %d, %Y %I:%M %p %Z")
 
     jt = it.get("jobType") or {}
-    jt_code = jt.get("code", "") if jt else ""
-    jt_desc = jt.get("description", "") if jt else ""
+    jt_code = jt.get("code", "")
+    jt_desc = jt.get("description", "")
 
     locations = it.get("locations") or []
     location_str = _fmt_primary_location(locations)
@@ -209,22 +219,34 @@ def _normalize_item(it: dict) -> GoldmanJob:
     )
 
 
-async def get_jobs() -> List[GoldmanJob]:
+async def _scrape_once(label: str) -> ScrapeResult:
+    """
+    One full Goldman scrape, paginated with no-progress/empty streak guard.
+    Returns a ScrapeResult (object mode).
+    """
+    company = get_company()
+    logger.info(f"[company={company}] 🚀 Goldman scrape ({label}) starting…")
+
+    # Small jitter to avoid synchronized bursts
+    await asyncio.sleep(random.uniform(0.0, 2.0))
+
     jobs: List[GoldmanJob] = []
     seen: set[str] = set()
 
-    await asyncio.sleep(random.uniform(0, 10))
-    logger.info("Entered Goldman get_jobs()")
-
-    page = 0
+    page = 0  # API is 0-based
     empty_streak = 0
     last_sig: Optional[tuple] = None
+    total_pages_visited = 0
+    per_page_new: Dict[int, int] = {}
+    last_total_count: Optional[int] = None
 
     while page < MAX_PAGES:
         headers = _headers()
         payload = _payload(page, EXPERIENCES)
 
         data = await post_json(API_URL, payload, headers)
+        total_pages_visited += 1
+
         if not data:
             empty_streak += 1
             logger.info(f"[Goldman] Empty/None payload on page {page}; streak {empty_streak}/{EMPTY_STREAK_LIMIT}")
@@ -234,18 +256,16 @@ async def get_jobs() -> List[GoldmanJob]:
             await asyncio.sleep(random.uniform(1, 3))
             continue
 
-        # GraphQL shape: { "data": { "roleSearch": { "totalCount": N, "items": [...] } } }
-        # ...inside the loop after fetching data...
         try:
-            rs = data.get("data", {}).get("roleSearch", {}) if isinstance(data, dict) else {}
+            rs = (data.get("data") or {}).get("roleSearch") or {}
             items = rs.get("items") or []
-            total_count = rs.get("totalCount")
+            last_total_count = rs.get("totalCount")
         except Exception:
             items = []
-            total_count = None
+            last_total_count = last_total_count  # preserve previous
 
         ids = [
-            (it.get("externalSource") or {}).get("sourceId") or (it.get("roleId") or "")
+            ((it.get("externalSource") or {}).get("sourceId")) or (it.get("roleId") or "")
             for it in items
         ]
         sig = tuple(ids[:5] + ids[-5:]) if ids else tuple()
@@ -258,6 +278,8 @@ async def get_jobs() -> List[GoldmanJob]:
                 seen.add(key)
                 jobs.append(j)
                 new_count += 1
+
+        per_page_new[page] = new_count
 
         no_progress = (len(items) == 0) or (sig == last_sig) or (new_count == 0)
         if no_progress:
@@ -275,11 +297,80 @@ async def get_jobs() -> List[GoldmanJob]:
             logger.info(f"[Goldman] Stopping after {EMPTY_STREAK_LIMIT} consecutive no-progress pages.")
             break
 
-        logger.info(f"[Goldman] Page {page}: +{new_count} new, total {len(jobs)} (server totalCount={total_count})")
+        logger.info(f"[Goldman] Page {page}: +{new_count} new, total {len(jobs)} (server totalCount={last_total_count})")
 
         page += 1
-        await asyncio.sleep(random.uniform(1, 3))
+        await asyncio.sleep(random.uniform(0.8, 2.0))
+
+    total_jobs = len(jobs)
+    logger.info(f"[company={company}] 🎉 Goldman union: {total_jobs} jobs across {total_pages_visited} pages")
+
+    anomalous_zero = (total_jobs == 0)
+
+    return ScrapeResult(
+        jobs=jobs,
+        scrape_id=str(random.getrandbits(32))[:8],
+        anomalous_zero=anomalous_zero,
+        stats={
+            "total_jobs": total_jobs,
+            "pages_visited": total_pages_visited,
+            "per_page_new": per_page_new,
+            "experiences": list(EXPERIENCES),
+            "server_totalCount_last": last_total_count,
+        },
+        meta={"mode": "paged"},
+    )
 
 
-    logger.info(f"🎉 [Goldman] Found total: {len(jobs)} jobs")
-    return jobs
+def should_persist_jobs(result: ScrapeResult, min_expected_count: int = 25) -> Tuple[bool, str]:
+    """
+    Goldman policy (object mode). Returns (should_persist, decision_reason).
+    Default threshold a bit lower than Meta/Apple due to narrower filters.
+    """
+    company = get_company()
+
+    if result is None:
+        return False, "no_result"
+
+    if result.anomalous_zero:
+        logger.warning(f"[company={company}] [{result.scrape_id}] 🧯 anomalous_zero=True; skip persist/notify.")
+        return False, "anomalous_zero"
+
+    jobs_count = len(result.jobs or [])
+    if jobs_count == 0:
+        logger.warning(f"[company={company}] [{result.scrape_id}] 🧯 zero jobs; skip persist/notify.")
+        return False, "zero_jobs"
+
+    if jobs_count < min_expected_count:
+        logger.warning(
+            f"[company={company}] [{result.scrape_id}] 🧯 Too few jobs ({jobs_count}<{min_expected_count}); "
+            "treating as partial outage; skip persist/notify."
+        )
+        return False, f"too_few({jobs_count}<{min_expected_count})"
+
+    return True, "ok"
+
+
+async def get_jobs(min_expected_count: int = 2) -> ScrapeResult:
+    """
+    Public entry: returns a ScrapeResult (object mode).
+    """
+    company = get_company()
+
+    async def _run_once(label: str) -> ScrapeResult:
+        # small jitter to de-sync with other scrapers
+        await asyncio.sleep(random.uniform(0.0, 2.0))
+        return await _scrape_once(label)
+
+    first = await _run_once("first-pass")
+
+    decided = await retry_and_decide(
+        company=company,
+        logger=logger,
+        first_result=first,
+        retry_fn=lambda: _run_once("retry-after-anomaly"),
+        min_expected_count=min_expected_count,
+        should_persist_fn=should_persist_jobs,
+    )
+
+    return decided
