@@ -72,7 +72,17 @@ async def confirm_big_drop(
 
     for attempt in range(1, max_refetches + 1):
         try:
-            refetched = await scraper_func()
+            ref_res = await scraper_func()
+
+            # Handle both ScrapeResult and legacy list
+            refetched = []
+            if isinstance(ref_res, dict) and "jobs" in ref_res:
+                refetched = ref_res["jobs"]
+            elif hasattr(ref_res, "jobs"):
+                refetched = ref_res.jobs
+            elif isinstance(ref_res, (list, tuple)):
+                refetched = ref_res
+
             for j in refetched:
                 base[j.job_id] = j
             if logger:
