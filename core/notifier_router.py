@@ -22,7 +22,7 @@ def _load_backend(preferred: str | None = None):
     if _backend_mod:
         return _backend_mod, _backend_name
 
-    preferred = (preferred or os.environ.get("NOTIFIER_BACKEND", "ses")).strip().lower()
+    preferred = (preferred or os.environ.get("NOTIFIER_BACKEND", "smtp")).strip().lower()
 
     # Try preferred first
     tried = []
