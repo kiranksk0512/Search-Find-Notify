@@ -231,7 +231,7 @@ def build_digest(results, no_email: bool):
                 sections.append("")
 
         if r_open:
-            sections.append(f"🔁 Reopened before delete threshold (not new): {r_open}")
+            # sections.append(f"🔁 Reopened before delete threshold (not new): {r_open}")
             seen_urls = set()
             for j in r_opened_dict.values():
                 url = getattr(j, "url", "") if hasattr(j, "url") else (j.get("url", "") if isinstance(j, dict) else "")
@@ -239,8 +239,8 @@ def build_digest(results, no_email: bool):
                 if url and url not in seen_urls:
                     seen_urls.add(url)
                     prefix = f"{title} – " if title else ""
-                    sections.append(f"{prefix}{url}")
-            sections.append("")
+                    # sections.append(f"{prefix}{url}")
+            # sections.append("")
 
         if d:
             sections.append(f"🗑️ Deleted jobs: {d}")
