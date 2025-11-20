@@ -10,6 +10,7 @@ from models.goldman_job import GoldmanJob
 from models.oracle_job import OracleJob
 from models.mergedblackrock_job import MergedBlackRockJob
 from models.adobe_job import AdobeJob
+from models.databricks_job import DatabricksJob
 
 REGISTRY: Dict[str, Type[BaseJob]] = {
     MetaJob.COMPANY_KEY: MetaJob,
@@ -22,6 +23,7 @@ REGISTRY: Dict[str, Type[BaseJob]] = {
     OracleJob.COMPANY_KEY: OracleJob,
     MergedBlackRockJob.COMPANY_KEY: MergedBlackRockJob,
     AdobeJob.COMPANY_KEY: AdobeJob,
+    DatabricksJob.COMPANY_KEY: DatabricksJob,
 }
 
 def get_model_cls(company: str) -> Type[BaseJob]:
