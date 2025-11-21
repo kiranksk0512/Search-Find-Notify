@@ -161,7 +161,7 @@ def parse_job(scrape_id: str, raw: Dict[str, Any], start: int) -> Optional[Micro
             isHotJob=raw.get("isHotJob", 0)
         )
 
-        logger.debug(f"[MicrosoftNew] [{scrape_id}] 🆕 Parsed {job_id} – {title}")
+        # logger.debug(f"[MicrosoftNew] [{scrape_id}] 🆕 Parsed {job_id} – {title}")
         return job
 
     except Exception as e:
