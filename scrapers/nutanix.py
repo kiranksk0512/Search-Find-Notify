@@ -7,6 +7,7 @@ import random
 import uuid
 import time
 from typing import List, Dict, Any, Tuple
+import os
 from urllib.parse import urlencode, urljoin
 
 from bs4 import BeautifulSoup
@@ -24,12 +25,13 @@ logger = get_company_logger()
 BASE_URL = "https://careers.nutanix.com/en/jobs/"
 
 USER_AGENTS = [
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)... Chrome/142",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64)... Chrome/142",
-    "Mozilla/5.0 (X11; Linux x86_64)... Chrome/142",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
 ]
 
 MAX_PAGES = 120
+NUTANIX_COOKIE_HEADER = os.getenv("NUTANIX_COOKIE") or ""
 
 
 def _build_page_url(page: int, pagesize: int = 20) -> str:
@@ -130,10 +132,22 @@ async def _scrape_once(label: str, company: str) -> ScrapeResult:
             "User-Agent": ua,
             "Accept-Language": "en-US,en;q=0.9",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+            "Accept-Encoding": "gzip, deflate, br",
             "Cache-Control": "no-cache",
             "Pragma": "no-cache",
             "Referer": BASE_URL,
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "same-origin",
+            "Sec-Fetch-User": "?1",
+            "Sec-Ch-Ua": '"Chromium";v="120", "Not A(Brand";v="24", "Google Chrome";v="120"',
+            "Sec-Ch-Ua-Mobile": "?0",
+            "Sec-Ch-Ua-Platform": '"Windows"',
         }
+
+        if NUTANIX_COOKIE_HEADER:
+            headers["Cookie"] = NUTANIX_COOKIE_HEADER
         all_jobs: List[NutanixJob] = []
         empty_streak = 0
         page = 1
