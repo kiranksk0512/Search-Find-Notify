@@ -29,6 +29,8 @@ USER_AGENTS = [
     "Mozilla/5.0 (X11; Linux x86_64)... Chrome/142",
 ]
 
+MAX_PAGES = 120
+
 
 def _build_page_url(page: int, pagesize: int = 20) -> str:
     params = {
@@ -129,10 +131,12 @@ async def _scrape_once(label: str, company: str) -> ScrapeResult:
             all_jobs: List[NutanixJob] = []
             empty_streak = 0
             page = 1
+            pages_processed = 0
 
-            while True:
+            while page <= MAX_PAGES:
                 url = _build_page_url(page)
                 html = await _fetch_page(session, url, scrape_id, page)
+                pages_processed += 1
 
                 if not html:
                     empty_streak += 1
@@ -171,7 +175,7 @@ async def _scrape_once(label: str, company: str) -> ScrapeResult:
             jobs=final_jobs,
             scrape_id=scrape_id,
             anomalous_zero=anomalous_zero,
-            stats={"pages": page},
+            stats={"pages": pages_processed},
             meta={"source": "phenom-html"},
         )
 
