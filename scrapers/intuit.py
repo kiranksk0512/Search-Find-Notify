@@ -158,7 +158,6 @@ async def _scrape_once(label: str, *, min_expected_count: int) -> ScrapeResult:
     all_jobs: List[IntuitJob] = []
     seen_ids = set()
     total_pages_hint: Optional[int] = None
-    total_results_hint: Optional[int] = None
 
     page = 1
     consecutive_empty = 0
@@ -177,12 +176,9 @@ async def _scrape_once(label: str, *, min_expected_count: int) -> ScrapeResult:
         html = data.get("results", "")
         page_jobs, meta = _parse_jobs(html)
         page_total_pages = meta.get("total_pages")
-        page_total_results = meta.get("total_results")
 
         if page_total_pages:
             total_pages_hint = page_total_pages
-        if page_total_results:
-            total_results_hint = page_total_results
 
         new_jobs = [job for job in page_jobs if job.job_id not in seen_ids]
         for job in new_jobs:
@@ -201,16 +197,13 @@ async def _scrape_once(label: str, *, min_expected_count: int) -> ScrapeResult:
         else:
             consecutive_empty = 0
 
-        if total_pages_hint and page >= total_pages_hint:
-            break
-
         page += 1
         await asyncio.sleep(random.uniform(0.6, 1.6))
 
     stats = {
         "count": len(all_jobs),
         "total_pages": total_pages_hint,
-        "total_results": total_results_hint,
+        "total_results": len(all_jobs),
         "records_per_page": RECORDS_PER_PAGE,
     }
 
