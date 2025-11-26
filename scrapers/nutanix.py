@@ -184,7 +184,7 @@ async def get_jobs(min_expected_count: int = 10) -> ScrapeResult:
         company=company,
         logger=logger,
         first_result=first,
-        retry_fn=lambda: _scrape_once("retry"),
+        retry_fn=lambda: _scrape_once("retry", company=company),
         min_expected_count=min_expected_count,
         should_persist_fn=should_persist_jobs,
     )

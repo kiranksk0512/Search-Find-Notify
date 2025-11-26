@@ -9,6 +9,7 @@ COMPANY_VERSIONING = {
     "apple": False,
     "google": False,
     "microsoft": False,
+    "intuit": False,
     # Add more companies as needed
 }
 
@@ -16,6 +17,7 @@ COMPANY_EMAIL_NOTIFICATIONS = {
     "apple": True,
     "google": True,
     "meta": True,
+    "intuit": True,
 }
 
 # Backup retention policy (in days)
