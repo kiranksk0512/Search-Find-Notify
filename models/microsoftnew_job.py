@@ -26,7 +26,7 @@ class MicrosoftNewJob(BaseJob):
 
     def format_message(self) -> str:
         return (
-            f"📣 Microsoft Job Alert\n"
+            f"📣 New Microsoft Job Alert\n"
             f"🔹 {self.title}\n"
             f"🔹 JobId: {self.job_id} ({self.display_job_id})\n"
             f"📍 Location: {self.location}\n"
