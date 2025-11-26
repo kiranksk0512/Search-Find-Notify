@@ -9,13 +9,13 @@ import time
 from typing import List, Dict, Any, Tuple
 from urllib.parse import urlencode, urljoin
 
-import aiohttp
 from bs4 import BeautifulSoup
 
 from core.logger import get_company_logger
 from core.context import get_company
 from core.scrape_types import ScrapeResult
 from core.decision import retry_and_decide
+from core.fetcher import get_text_resilient
 
 from models.nutanix_job import NutanixJob
 
@@ -76,23 +76,27 @@ def _parse_jobs(html: str) -> List[NutanixJob]:
     return jobs
 
 
-async def _fetch_page(session: aiohttp.ClientSession, url: str, scrape_id: str, page: int):
+async def _fetch_page(url: str, headers: Dict[str, str], scrape_id: str, page: int):
     company = get_company()
     t0 = time.time()
-    try:
-        async with session.get(url) as resp:
-            text = await resp.text()
-            dt = int((time.time() - t0) * 1000)
-            logger.info(
-                f"[company={company}] [{scrape_id}] ⬇️ Page {page} OK (ms={dt} size={len(text)})"
-            )
-            return text
-    except Exception as e:
-        dt = int((time.time() - t0) * 1000)
-        logger.error(
-            f"[company={company}] [{scrape_id}] ❌ Page {page} fetch failed (ms={dt}): {e}"
+    text = await get_text_resilient(
+        url,
+        headers=headers,
+        max_retries=3,
+        base_timeout=10,
+        max_backoff=20,
+        logger=logger,
+    )
+    dt = int((time.time() - t0) * 1000)
+    if text is not None:
+        logger.info(
+            f"[company={company}] [{scrape_id}] ⬇️ Page {page} OK (ms={dt} size={len(text)})"
         )
-        return None
+    else:
+        logger.error(
+            f"[company={company}] [{scrape_id}] ❌ Page {page} fetch failed (ms={dt})"
+        )
+    return text
 
 
 def should_persist_jobs(result: ScrapeResult, min_expected_count: int = 10) -> Tuple[bool, str]:
@@ -125,46 +129,48 @@ async def _scrape_once(label: str, company: str) -> ScrapeResult:
         headers = {
             "User-Agent": ua,
             "Accept-Language": "en-US,en;q=0.9",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
+            "Referer": BASE_URL,
         }
+        all_jobs: List[NutanixJob] = []
+        empty_streak = 0
+        page = 1
+        pages_processed = 0
 
-        async with aiohttp.ClientSession(headers=headers) as session:
-            all_jobs: List[NutanixJob] = []
-            empty_streak = 0
-            page = 1
-            pages_processed = 0
+        while page <= MAX_PAGES:
+            url = _build_page_url(page)
+            html = await _fetch_page(url, headers, scrape_id, page)
+            pages_processed += 1
 
-            while page <= MAX_PAGES:
-                url = _build_page_url(page)
-                html = await _fetch_page(session, url, scrape_id, page)
-                pages_processed += 1
-
-                if not html:
+            if not html:
+                empty_streak += 1
+                logger.warning(
+                    f"[company={company}] [{scrape_id}] ⚠️ Empty HTML page {page}. streak={empty_streak}/3"
+                )
+            else:
+                jobs = _parse_jobs(html)
+                if len(jobs) == 0:
                     empty_streak += 1
-                    logger.warning(
-                        f"[company={company}] [{scrape_id}] ⚠️ Empty HTML page {page}. streak={empty_streak}/3"
+                    logger.info(
+                        f"[company={company}] [{scrape_id}] 🈳 Page {page} has 0 jobs. streak={empty_streak}/3"
                     )
                 else:
-                    jobs = _parse_jobs(html)
-                    if len(jobs) == 0:
-                        empty_streak += 1
-                        logger.info(
-                            f"[company={company}] [{scrape_id}] 🈳 Page {page} has 0 jobs. streak={empty_streak}/3"
-                        )
-                    else:
-                        empty_streak = 0
-                        all_jobs.extend(jobs)
-                        logger.info(
-                            f"[company={company}] [{scrape_id}] 📦 Page {page}: {len(jobs)} jobs"
-                        )
-
-                if empty_streak >= 3:
-                    logger.warning(
-                        f"[company={company}] [{scrape_id}] 🛑 Stopping: 3 empty pages reached."
+                    empty_streak = 0
+                    all_jobs.extend(jobs)
+                    logger.info(
+                        f"[company={company}] [{scrape_id}] 📦 Page {page}: {len(jobs)} jobs"
                     )
-                    break
 
-                page += 1
-                await asyncio.sleep(random.uniform(0.25, 0.6))
+            if empty_streak >= 3:
+                logger.warning(
+                    f"[company={company}] [{scrape_id}] 🛑 Stopping: 3 empty pages reached."
+                )
+                break
+
+            page += 1
+            await asyncio.sleep(random.uniform(0.25, 0.6))
 
         by_id = {job.job_id: job for job in all_jobs}
         final_jobs = list(by_id.values())

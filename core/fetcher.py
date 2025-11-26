@@ -160,6 +160,62 @@ async def get_json(url, headers=None, params=None, cookies=None):
                  f"headers={headers} params={params}")
     return None
 
+
+async def get_text_resilient(
+    url: str,
+    *,
+    headers: Optional[Dict[str, str]] = None,
+    params: Optional[Dict[str, Any]] = None,
+    cookies: Optional[Dict[str, str]] = None,
+    max_retries: int = 3,
+    base_timeout: int = 10,
+    max_backoff: int = 20,
+    logger=None,
+) -> Optional[str]:
+    """Fetch plain text with retries/backoff, similar to get_json_resilient."""
+    attempt = 0
+    async with aiohttp.ClientSession(cookies=cookies) as session:
+        while attempt < max_retries:
+            attempt += 1
+            delay = None
+            try:
+                timeout = aiohttp.ClientTimeout(total=base_timeout)
+                async with session.get(url, headers=headers, params=params, timeout=timeout) as resp:
+                    text = await resp.text()
+                    if resp.status == 200:
+                        return text
+
+                    if logger:
+                        body_snip = text[:300]
+                        logger.warning(
+                            f"⚠️ GET {url} -> {resp.status}; params={params} body: {body_snip}"
+                        )
+
+                    if not _retryable_status(resp.status):
+                        return None
+
+                    ra = resp.headers.get("Retry-After")
+                    if ra:
+                        try:
+                            delay = float(ra)
+                        except Exception:
+                            delay = None
+                    if delay is None:
+                        delay = min(max_backoff, 2 ** attempt + random.random())
+            except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+                if logger:
+                    logger.warning(f"⚠️ GET attempt {attempt} failed: {e}")
+                delay = min(max_backoff, 2 ** attempt + random.random())
+
+            if delay is None:
+                delay = 1.0
+            await asyncio.sleep(delay)
+
+    if logger:
+        logger.error(f"❌ All {max_retries} GET attempts failed for {url} with params={params}")
+    return None
+
+
 def _retryable_status(status: Optional[int]) -> bool:
     # Retry on 429 and 5xx
     return status == 429 or (status is not None and 500 <= status < 600)
