@@ -13,6 +13,7 @@ from models.adobe_job import AdobeJob
 from models.databricks_job import DatabricksJob
 from models.microsoftnew_job import MicrosoftNewJob
 from models.salesforce_job import SalesforceJob
+from models.nutanix_job import NutanixJob
 
 REGISTRY: Dict[str, Type[BaseJob]] = {
     MetaJob.COMPANY_KEY: MetaJob,
@@ -28,6 +29,7 @@ REGISTRY: Dict[str, Type[BaseJob]] = {
     DatabricksJob.COMPANY_KEY: DatabricksJob,
     MicrosoftNewJob.COMPANY_KEY: MicrosoftNewJob,
     SalesforceJob.COMPANY_KEY: SalesforceJob,
+    NutanixJob.COMPANY_KEY: NutanixJob,
 }
 
 def get_model_cls(company: str) -> Type[BaseJob]:
