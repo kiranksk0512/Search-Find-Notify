@@ -191,7 +191,7 @@ async def _scrape_once(label: str, *, min_expected_count: int) -> ScrapeResult:
 
         if not page_jobs:
             consecutive_empty += 1
-            if consecutive_empty >= 2:
+            if consecutive_empty >= 3:
                 logger.info(f"[company={company}] [{label}] ⚠️ stopping after {consecutive_empty} empty pages")
                 break
         else:
