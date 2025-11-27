@@ -28,6 +28,8 @@ USER_AGENTS = [
     "Mozilla/5.0 (X11; Linux x86_64)... Chrome/142.0",
 ]
 
+MAX_PAGES = 100
+
 
 def _hash_short(s: str) -> str:
     try:
@@ -156,7 +158,7 @@ async def _scrape_once(label: str):
             empty_streak = 0
             page = 1
 
-            while True:
+            while page <= MAX_PAGES:
                 url = _build_page_url(page)
                 html = await _fetch_html(session, url, scrape_id, page)
 
@@ -193,6 +195,11 @@ async def _scrape_once(label: str):
                 page += 1
                 await asyncio.sleep(random.uniform(0.3, 0.7))
             last_page = page - 1
+
+            if page > MAX_PAGES:
+                logger.info(
+                    f"[company={company}] [{scrape_id}] ⛔ Reached MAX_PAGES cap ({MAX_PAGES})."
+                )
         # dedupe
         by_id = {job.job_id: job for job in all_jobs}
         final_jobs = list(by_id.values())
