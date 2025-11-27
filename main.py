@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import os
 import time
 from datetime import datetime, timezone
 
@@ -295,18 +296,45 @@ async def main():
     start_time = time.time()
 
     # 1) choose which scrapers to run
+    skipped_companies = []
+
+    skip_env = os.getenv("SFN_SKIP_COMPANIES", "")
+    skip_companies = {
+        company.strip().lower()
+        for company in skip_env.split(",")
+        if company.strip()
+    }
+
     if args.company.lower() == "all":
         global_logger.info("🔁 Starting all scrapers...")
-        tasks = [run_scraper(company, scraper_func, args.force_version)
-                 for company, scraper_func in scraper_map.items()]
-        results = await asyncio.gather(*tasks, return_exceptions=False)
+        tasks = []
+        for company, scraper_func in scraper_map.items():
+            if company in skip_companies:
+                global_logger.info(
+                    f"⏭️ Skipping {company} because it's listed in SFN_SKIP_COMPANIES"
+                )
+                skipped_companies.append(company)
+                continue
+            tasks.append(run_scraper(company, scraper_func, args.force_version))
+
+        if tasks:
+            results = await asyncio.gather(*tasks, return_exceptions=False)
+        else:
+            results = []
     else:
         company = args.company.lower()
         scraper_func = scraper_map.get(company)
         if not scraper_func:
             global_logger.error(f"❌ No scraper found for company '{company}'")
             return
-        results = [await run_scraper(company, scraper_func, args.force_version)]
+        if company in skip_companies:
+            global_logger.info(
+                f"⏭️ {company} run disabled because it's listed in SFN_SKIP_COMPANIES"
+            )
+            skipped_companies.append(company)
+            results = []
+        else:
+            results = [await run_scraper(company, scraper_func, args.force_version)]
 
     # 2) aggregated email (single SES send)
     digest = build_digest(results, args.no_email)
@@ -326,6 +354,10 @@ async def main():
     changed_companies = sum(1 for r in results if r.new or r.deleted or (getattr(r, "reopened", {}) or {}))
 
     global_logger.info("📋 SUMMARY")
+    if skipped_companies:
+        global_logger.info(
+            f"⏭️ Skipped (env): {', '.join(sorted(skipped_companies))}"
+        )
     global_logger.info(f"🏢 Ran scrapers: {len(results)} | 🔄 Changed: {changed_companies}")
     global_logger.info(f"✅ Succeeded: {succeeded}")
     global_logger.info(f"❌ Failed: {failed}")
