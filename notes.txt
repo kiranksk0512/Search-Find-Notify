@@ -48,5 +48,25 @@ checks.
 
 
 
+Walmart Careers AI:
+-------------------
+
+Environment knobs for the `walmart` scraper:
+
+	WALMART_COOKIE		Required `Cookie` header copied from an authenticated session.
+	WALMART_PROMPT		Optional natural-language filter prompt (default focuses on Tech roles).
+	WALMART_POPULATIONS	Pipe- or comma-separated population codes (default includes US Walmart/Sam's/Vizio).
+	WALMART_MAX_PAGES	Maximum conversation pages to request (default: 60).
+	WALMART_MIN_EXPECTED	Minimum job count before flagging the run as anomalous (default: 40).
+	WALMART_REFERER		Optional override for the Referer header (default: results page).
+
+The scraper replays the GraphQL `GetJobSearchAssistant` query against
+`https://careers.walmart.com/api/streaming/careers-ai/api/chat/sync` and relies
+on the provided session cookie to satisfy Cloudflare / bot protections.
+
+
+
+
+
 
 
