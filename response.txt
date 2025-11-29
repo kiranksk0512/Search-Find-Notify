@@ -1,0 +1,1040 @@
+{
+    "data": {
+        "jobSearchAssistant": {
+            "thread_id": "1764287207821-0f75a42a-f24b-437f-8892-b366df7ebe0b",
+            "timestamp": "1764354075",
+            "tool_messages": [
+                {
+                    "name": "combined_hybrid_search_tool",
+                    "status": "success",
+                    "content": "{\"total_jobs\": 495, \"total_content\": 34, \"total_artifacts\": 529, \"total_future_roles\": 0, \"job_page_number\": 0, \"content_page_number\": 0, \"future_roles_page_number\": 0, \"refined_query\": \"software engineering and architecture jobs in Technologyquery_separatorsoftware engineering architecture\", \"job_filters\": \"(areas IN ['Technology'] AND categories IN ['Software Engineering and Architecture']) AND population IN ['WALMART_EXT_CAMPUS_US', 'WALMART_EXT_FIELD_US', 'SAMS_EXT_CAMPUS_US', 'SAMS_EXT_FIELD_US', 'VIZIO_CAMPUS_EXTERNAL', 'VIZIO_FIELD_EXTERNAL']\"}",
+                    "tool_call_id": "call_XVZVE7lDvTww0pWdjMAUx4Dj",
+                    "artifact": {
+                        "applied_facets": {
+                            "AreaCategory": {
+                                "Technology": [
+                                    "Software Engineering and Architecture"
+                                ]
+                            }
+                        },
+                        "totalResults": null,
+                        "page_size": 10,
+                        "page_number": null,
+                        "filters": "(areas IN ['Technology'] AND categories IN ['Software Engineering and Architecture']) AND population IN ['WALMART_EXT_CAMPUS_US', 'WALMART_EXT_FIELD_US', 'SAMS_EXT_CAMPUS_US', 'SAMS_EXT_FIELD_US', 'VIZIO_CAMPUS_EXTERNAL', 'VIZIO_FIELD_EXTERNAL']",
+                        "searchString": null,
+                        "total_jobs": 495,
+                        "total_content": 34,
+                        "total_future_roles": 0,
+                        "job_page_number": 0,
+                        "content_page_number": 0,
+                        "future_roles_page_number": 0,
+                        "refined_query": "software engineering and architecture jobs in Technologyquery_separatorsoftware engineering architecture",
+                        "status": "success",
+                        "content_results": {
+                            "content": [
+                                {
+                                    "id": "/content/careers/us/en/sams-home/careers-areas/technology/Software-Engineering-and-Architecture",
+                                    "text": "Title : Software Engineering & Architecture.Description : Help build digital experiences, one line of code at a time. At Sam's Club, we see software engineering and architecture as a blank canvas for innovation, where your creativity meets your passion for serving members. You're not just writing lines of code; you're shaping user experiences and unlocking endless creative possibilities..\n Page content : Software Engineering & Architecture Help build digital experiences, one line of code at a time. At Sam's Club, we see software engineering and architecture as a blank canvas for innovation, where your creativity meets your passion for serving members. You're not just writing lines of code; you're shaping user experiences and unlocking endless creative possibilities. See all open roles software engineering and architecture Craft your way to the top Design technology that makes life better See all software engineering & architecture roles Software Engineering & Architecture middle Shape the digital future Vision and action drive success. You'll design, test, and evaluate software to ensure quality and reliability. middle Master the flow Handling diverse tasks across both will sharpen your ability to move seamlessly between them and deliver end-to-end solutions. Explore our benefits That’s just the beginning. We offer more perks specific
+to your work location and role. Learn about our benefits Sam's Club associates are eligible for a 10% discount card on most regular-priced items and fresh produce in-store and on select items at Walmart.com. Eligible after 90 days of employment. Get 10% off Discount Card Walmart field associates can earn a degree or in-demand skills certificates with no debt- Walmart covers 100% of tuition and books. Live Better U offers 60+ programs for Associates to pursue their dreams. 100% covered Live Better U Sam’s Club has invested in the next generation of talent through in-house training programs and community-based organizations that cultivate opportunities for everyone. Grow your skills Clear Pathways Financial perks Enjoy 401(k) matching and stock purchase plans. Paid time off Take a break as needed for vacations, sick leave, holidays, parental leave and more. Comprehensive health benefits Medical, dental, vision and wellness programs for you and your family. Well-being programs Access mental health resources and assistance programs for life’s challenges. Career growth opportunities Training, leadership programs, and clear paths to advance.  Three hubs. One mission. Endless possibilities Our hubs spark collaboration and innovation, so you’re free to energize and push boundaries from the space that serves you best. See all hubs Northwest Arkansas Sunnyvale Sunnyvale Hoboken Hoboken Find the role
+that’s a perfect fit ",
+                                    "score": 0.032522473,
+                                    "metadata": {
+                                        "country": "US",
+                                        "thumbnail": "https://cms.careers.walmart.com/content/dam/careers/sam's-club-tech-and-corporate/Sam's%20Corporate%20and%20Tech-19.jpg",
+                                        "distance": 0.9674775,
+                                        "description": "Help build digital experiences, one line of code at a time. At Sam's Club, we see software engineering and architecture as a blank canvas for innovation, where your creativity meets your passion for serving members. You're not just writing lines of code; you're shaping user experiences and unlocking endless creative possibilities.",
+                                        "areas": "Generic",
+                                        "language": "en",
+                                        "categories": "Generic",
+                                        "title": "Software Engineering & Architecture",
+                                        "brand": "sams",
+                                        "url": "/content/careers/us/en/sams-home/careers-areas/technology/Software-Engineering-and-Architecture",
+                                        "createDate": "1762492907575"
+                                    }
+                                },
+                                {
+                                    "id": "/content/careers/us/en/home/careers-areas/technology/software-engineering-and-architecture",
+                                    "text": "Title : Software Engineering And Architecture.Description : You're empowered by tech and proud of it. Code the future of eCommerce and retail innovation. Careers in tech make retail easier, smarter, and more affordable for millions of customers..\n Page content : Software Engineering & Architecture You're empowered by tech and proud of it. Code the future of eCommerce and retail innovation. Careers in tech make retail easier, smarter, and more affordable for millions of customers. See all open roles software engineering and architecture Building next-gen experiences Join us in redefining how the world shops by harnessing a powerful mix of cutting-edge technologies. Leverage a wide variety of cutting-edge technologies, like retail AI/ML, cloud, 5G, voice, and computer vision to re-engineer the way the world shops. At the intersection of retail and technology, your code can change lives. 5G Voice AI/ML Technology Build what’s next See all open roles Software Engineering & Architecture middle Create You’ll write, build, and test the technology that powers Walmart and Sam’s Club at scale. From reimagining the checkout experience to enabling seamless online orders, your work turns complex challenges into simple, reliable solutions. middle Scale You’ll design software and systems that are fast, stable, and built to grow. With every release, you’ll help us move smarter, reach further, and serve millions more - without slowing down. Explore our benefits Learn more about benefits Walmart associates are eligible for a 10% discount card on all general merchandise items and fresh produce in-store and on select items at Walmart.com. Eligible after 90 days of employment. Get 10% off Discount Card Walmart field associates can earn a degree or in-demand skills certificates with no debt- Walmart covers 100% of tuition and books. Live Better U offers 60+ programs for Associates to pursue their dreams. 100% covered Live Better U Ready to grow your career? Walmart Academy offers job-specific retail training and leadership courses to help Associates reach their career goals. Grow your skills Walmart Academy Financial perks Enjoy 401(k) matching and stock purchase plans. Paid time off Take a break as needed for vacations, sick leave, holidays, parental leave and more. Comprehensive health benefits Medical, dental, vision and wellness programs for you and your family. Well-being programs Access mental health resources and assistance programs for life’s challenges. Career growth opportunities Training, leadership programs, and clear paths to advance.  Technology jobs with epic impact At Walmart Global Tech, innovation drives everything we do. Our teams build technology that powers retail for millions—across Walmart, Sam’s Club, and beyond. One idea or line of code here can impact the world. Working at Walmart Global Tech Three hubs. One mission. Endless possibilities Our hubs spark collaboration and innovation, so you’re free to energize and push boundaries from the space that serves you best. See all hubs Northwest Arkansas Sunnyvale Sunnyvale Hoboken Hoboken Inspiration in every role &quot;Imagine scanning a barcode in store, pulling up your profile, coupons, payment methods - even your digital receipt - all in one experience.&quot; Director of Engineering Balaji &quot;I love being on the forefront of technology - where your ideas and work are shaping experiences that will be used by millions.&quot; Software Engineer II Olivia &quot;The product I’m working on lets customers shop without even knowing what they’re looking for. That’s innovation.&quot; Software Engineer (iOS) Tatiana Roles picked for you See all Openings ",
+                                    "score": 0.032522473,
+                                    "metadata": {
+                                        "country": "US",
+                                        "thumbnail": "https://cms.careers.walmart.com/content/dam/careers/technology-l2/software-engineering-and-architecture/Global%20TechRetouched-21.jpg",
+                                        "distance": 0.9674775,
+                                        "description": "You're empowered by tech and proud of it. Code the future of eCommerce and retail innovation. Careers in tech make retail easier, smarter, and more affordable for millions of customers.",
+                                        "areas": "Generic",
+                                        "language": "en",
+                                        "categories": "Generic",
+                                        "title": "Software Engineering And Architecture",
+                                        "brand": "walmart",
+                                        "url": "/content/careers/us/en/home/careers-areas/technology/software-engineering-and-architecture",
+                                        "createDate": "1762492786449"
+                                    }
+                                },
+                                {
+                                    "id": "/content/careers/us/en/home/careers-areas/technology",
+                                    "text": "Title : Technology.Description : At Walmart and Sam’s Club, we are people-led, tech-powered. Everything you build here - from smarter supply chains to seamless shopping - starts with real needs and creates real impact. Join a team where your code, ideas, and curiosity shape the future for millions..\n Page content : Technology At Walmart and Sam’s Club, we are people-led, tech-powered. Everything you build here - from smarter supply chains to seamless shopping - starts with real needs and creates real impact. Join a team where your code, ideas, and curiosity shape the future for millions. See all Technology Jobs All See all open roles Software Engineering and Architecture Software Engineering and Architecture Information Security Information Security Creative and Design Creative and Design Data Science and Analytics Data Science and Analytics Technical Program Management Technical Program Management Information Technology Information Technology Product Management Product Management Explore our benefits Learn more about benefits Walmart associates are eligible for a 10% discount card on all general merchandise items and fresh produce in-store and on select items at Walmart.com. Eligible after 90 days of employment. Get 10% off Discount Card Walmart field associates can earn a degree or in-demand skills certificates with no debt- Walmart covers 100% of tuition and books. Live Better U offers 60+ programs for Associates to pursue their dreams. 100% covered Live Better U Ready to grow your career? Walmart Academy offers job-specific retail training and leadership courses to help Associates reach their career goals. Grow your skills Walmart Academy Financial perks Enjoy 401(k) matching and stock purchase plans. Paid time off Take a break as needed for vacations, sick leave, holidays, parental leave and more. Comprehensive health benefits Medical, dental, vision and wellness programs for you and your family. Well-being programs Access mental health resources and assistance programs for life’s challenges. Career growth opportunities Training, leadership programs, and clear paths to advance.  Our vision is strong here. Walmart Global Tech works at the forefront of cutting-edge technologies inspired by the vision of transforming retail tech. Tech with real-world impact See all technology roles All middle Belonging We build technology that serves millions and it starts with how we show up for each other. At Walmart and Sam’s Club, belonging means working in a team where your voice matters and your perspective makes us stronger. middle Impact From tools that help associates in stores and clubs to systems that move products across the country, we build with purpose. Every line of code, every decision, helps people save money and live better. Three hubs. One mission. Endless possibilities Our hubs spark collaboration and innovation, so you’re free to energize and push boundaries from the space that serves you best. See all hubs Northwest Arkansas Sunnyvale Sunnyvale Hoboken Hoboken Inspiration in every role &quot;We’re data geeks, and the depth we get to explore here keeps us excited every single day.&quot; Senior Manager, Food Media Insights Christopher &quot;I love seeing firsthand how the work I do impacts the customer experience—it’s real, it’s immediate.&quot;&nbsp; Yield Manager Antony &quot;The product I’m working on lets customers shop without even knowing what they’re looking for. That’s innovation.&quot; Software Engineer (iOS) Tatiana Find the role that’s a perfect fit ",
+                                    "score": 0.031746034,
+                                    "metadata": {
+                                        "country": "US",
+                                        "thumbnail": "https://cms.careers.walmart.com/content/dam/careers/global-tech/Global%20TechRetouched-41.jpg",
+                                        "distance": 0.96825397,
+                                        "description": "At Walmart and Sam’s Club, we are people-led, tech-powered. Everything you build here - from smarter supply chains to seamless shopping - starts with real needs and creates real impact. Join a team where your code, ideas, and curiosity shape the future for millions.",
+                                        "areas": "Generic",
+                                        "language": "en",
+                                        "categories": "Generic",
+                                        "title": "Technology",
+                                        "brand": "walmart",
+                                        "url": "/content/careers/us/en/home/careers-areas/technology",
+                                        "createDate": "1762492868680"
+                                    }
+                                },
+                                {
+                                    "id": "/content/careers/us/en/sams-home/careers-areas/technology",
+                                    "text": "Title : Technology.Description : We're transforming how millions of people shop, every day. At Sam's Club, you'll join a dynamic team focused on building innovative digital products, services, and platforms. Your work will help create faster, easier, and more personalized shopping experiences at scale. .\n Page content : Technology We're transforming how millions of people shop, every day. At Sam's Club, you'll join a dynamic team focused on building innovative digital products, services, and platforms. Your work will help create faster, easier, and more personalized shopping experiences at scale. All See all open roles Join our team Creative and Design Creative and Design Data Science and Analytics Data Science and Analytics Information Security Information Security Information Technology Information Technology Product Management Product Management Software Engineering and Architecture Software Engineering and Architecture Technical Program Management Technical Program Management Explore our benefits That’s just the beginning. We offer more perks specific
+to your work location and role. Learn about our benefits Sam's Club associates are eligible for a 10% discount card on most regular-priced items and fresh produce in-store and on select items at Walmart.com. Eligible after 90 days of employment. Get 10% off Discount Card Walmart field associates can earn a degree or in-demand skills certificates with no debt- Walmart covers 100% of tuition and books. Live Better U offers 60+ programs for Associates to pursue their dreams. 100% covered Live Better U Sam’s Club has invested in the next generation of talent through in-house training programs and community-based organizations that cultivate opportunities for everyone. Grow your skills Clear Pathways Financial perks Enjoy 401(k) matching and stock purchase plans. Paid time off Take a break as needed for vacations, sick leave, holidays, parental leave and more. Comprehensive health benefits Medical, dental, vision and wellness programs for you and your family. Well-being programs Access mental health resources and assistance programs for life’s challenges. Career growth opportunities Training, leadership programs, and clear paths to advance.  At Sam’s Club, technology moves with purpose, bringing talented teams together to build smarter, faster, more personalized experiences for our members. Turn big challenges into bold solutions See all technology roles All middle Tackle complexity Timelines, budgets, and planning aren't roadblocks, they're tools you use to drive alignment and deliver results. Join a group of thinkers, builders, and doers who work together to take on challenges at scale. middle Make an impact Take ownership of high-impact projects that shape how millions of members shop and interact with Sam’s Club every day. middle Own the process Use your technical expertise and organizational skills to lead projects through every stage. Your work drives results and creates meaningful impact. Three hubs. One mission. Endless possibilities Our hubs spark collaboration and innovation, so you’re free to energize and push boundaries from the space that serves you best. See all hubs Northwest Arkansas Sunnyvale Sunnyvale Hoboken Hoboken Find the role that's a perfect fit ",
+                                    "score": 0.031009614,
+                                    "metadata": {
+                                        "country": "US",
+                                        "thumbnail": "https://cms.careers.walmart.com/content/dam/careers/sam's-club-tech-and-corporate/Sam's%20Corporate%20and%20Tech-18.jpg",
+                                        "distance": 0.9689904,
+                                        "description": "We're transforming how millions of people shop, every day. At Sam's Club, you'll join a dynamic team focused on building innovative digital products, services, and platforms. Your work will help create faster, easier, and more personalized shopping experiences at scale. ",
+                                        "areas": "Generic",
+                                        "language": "en",
+                                        "categories": "Generic",
+                                        "title": "Technology",
+                                        "brand": "sams",
+                                        "url": "/content/careers/us/en/sams-home/careers-areas/technology",
+                                        "createDate": "1762492921792"
+                                    }
+                                },
+                                {
+                                    "id": "/content/careers/us/en/home/careers-areas/supply-chain-and-transportation/engineering",
+                                    "text": "Title : Engineering.Description : Your innovation can impact millions. Let's build something extraordinary together. Join Walmart engineering, where we design the future of retail on an unprecedented scale!\r\n.\n Page content : Engineering Your innovation can impact millions. Let's build something extraordinary together. Join Walmart engineering, where we design the future of retail on an unprecedented scale! See all open roles Engineering Building better for millions See all engineering roles Engineering middle Thrive At Walmart and Sam’s Club, engineers solve big problems with real impact. You’ll take on complex challenges, think creatively, and help reimagine retail for millions. If you're driven by innovation and hands-on results, this is where your work truly matters. middle Opportunity Here, every kind of engineer plays a role. Whether you're focused on civil, mechanical, industrial, or electrical systems, you’ll find the tools, teams, and scale to do your best work and keep growing. middle Elevate You’re wired to make things better. From guiding store construction to designing equipment and streamlining logistics, you’ll engineer smarter systems that move faster, work better, and support communities everywhere. Explore our benefits Learn more about benefits As a Walmart Associate, you're eligible to become a Walmart+ member. Enjoy benefits like free store delivery and shipping, fuel savings, and video streaming. Sam's Club associates are eligible for a Club Membership. Free shipping Walmart+ Walmart field associates can earn a degree or in-demand skills certificates with no debt- Walmart covers 100% of tuition and books. Live Better U offers 60+ programs for Associates to pursue their dreams. 100% covered Live Better U Ready to grow your career? Walmart Academy offers job-specific retail training and leadership courses to help Associates reach their career goals. Grow your skills Walmart Academy Financial perks Enjoy 401(k) matching and stock purchase plans. Paid time off Take a break as needed for vacations, sick leave, holidays, parental leave and more. Comprehensive health benefits Medical, dental, vision and wellness programs for you and your family. Well-being programs Access mental health resources and assistance programs for life’s challenges. Career growth opportunities Training, leadership programs, and clear paths to advance.  Where you fit best Manoj is an automation engineer at Walmart who enjoys being part of a collaborative team and culture. He values the opportunity to work on innovative solutions that help power a smarter, more efficient supply chain. Day in the life Manoj Automation Engineer Inspiration in every role &quot;In five years, I see myself leading automation teams that roll out innovation on an even larger scale.&quot; Automation Engineer Manoj &quot;It all comes down to people—people drive the overall success.&quot; Automation Engineer Grey &quot;I see a future here. I see a place where I can definitely retire.&quot; Inbound Operations Manager Noemi Roles picked for you See all Openings ",
+                                    "score": 0.030330881,
+                                    "metadata": {
+                                        "country": "US",
+                                        "thumbnail": "https://cms.careers.walmart.com/content/dam/careers/supply-chain-l2/Supply%20Chain-15.jpg",
+                                        "distance": 0.9696691,
+                                        "description": "Your innovation can impact millions. Let's build something extraordinary together. Join Walmart engineering, where we design the future of retail on an unprecedented scale!\r\n",
+                                        "areas": "Generic",
+                                        "language": "en",
+                                        "categories": "Generic",
+                                        "title": "Engineering",
+                                        "brand": "walmart",
+                                        "url": "/content/careers/us/en/home/careers-areas/supply-chain-and-transportation/engineering",
+                                        "createDate": "1762531122038"
+                                    }
+                                },
+                                {
+                                    "id": "/content/careers/us/en/home/careers-areas/technology/product-management",
+                                    "text": "Title : Product Management.Description : Walmart Product Managers solve big problems at scale, building tools that power millions of customer experiences and empower associates every day. It's innovation with real-world impact, shaping the future of retail.\r\n.\n Page content : Product Management Walmart Product Managers solve big problems at scale, building tools that power millions of customer experiences and empower associates every day. It's innovation with real-world impact, shaping the future of retail. See all open roles Product Management Every journey starts with a team Behind every experience we create is a product team shaping the strategy, building the tools, and connecting the dots. Explore the spaces where you can make an impact across our stores, clubs, supply chain, and digital world. &nbsp; Associate Product Empowers associates and simplify their work. &nbsp; Last Mile Delivery The team behind last mile delivery network, from AV’s to drones. &nbsp; Digital Services Omni-channel experiences for health &amp; wellness, financial services, and more. &nbsp; Merchant &amp; Inventory Product Empower merchants with omni-channel tools &amp; insights. &nbsp; Next Gen Re-imagine the future of stores and clubs. &nbsp; Customer Data &amp; Platforms Omni-channel platforms that power the world’s largest employer. &nbsp; Walmart Connect Strategize, build and launch world-class advertising platforms and products for advertisers of all sizes. &nbsp; Sam's Club Enhance the member and associate experience in clubs. Build what matters See product management roles Product Management middle Impact Product Managers at Walmart don’t just build features, they create solutions that touch millions of lives. From the Walmart app to associate tools and health innovations, every product is designed to make a real difference at scale. middle Purpose With the customer and associate journey at the heart of every decision, our Product Managers lead with empathy and intention. Every solution is crafted to help people save money, live better, and work smarter. middle Collaboration Great products are built together. At Walmart, Product Managers work cross-functionally with design, engineering, and business teams to solve complex problems and deliver inclusive, tech-enabled experiences. Explore our benefits Learn more about benefits Walmart associates are eligible for a 10% discount card on all general merchandise items and fresh produce in-store and on select items at Walmart.com. Eligible after 90 days of employment. Get 10% off Discount Card Walmart field associates can earn a degree or in-demand skills certificates with no debt- Walmart covers 100% of tuition and books. Live Better U offers 60+ programs for Associates to pursue their dreams. 100% covered Live Better U Ready to grow your career? Walmart Academy offers job-specific retail training and leadership courses to help Associates reach their career goals. Grow your skills Walmart Academy Financial perks Enjoy 401(k) matching and stock purchase plans. Paid time off Take a break as needed for vacations, sick leave, holidays, parental leave and more. Comprehensive health benefits Medical, dental, vision and wellness programs for you and your family. Well-being programs Access mental health resources and assistance programs for life’s challenges. Career growth opportunities Training, leadership programs, and clear paths to advance.  What does an average day look like? Belonging fuels innovation. Our associates drive digital solutions that keep Walmart strong and future-ready. We’re people-led, tech-powered, and built to grow together. A place to belong Walmart Global Tech Inspiration in every role &quot;I love being on the forefront of technology—where your ideas and work are shaping experiences that will be used by millions.&quot; Sr. Product Manager Brielle &quot;The product I’m working on lets customers shop without even knowing what they’re looking for. That’s innovation.&quot; Software Engineer (iOS) Tatiana &quot;Imagine scanning a barcode in store, pulling up your profile, coupons, payment methods—even your digital receipt—all in one experience.&quot; Director of Engineering Balaji Roles picked for you See all Openings ",
+                                    "score": 0.029857397,
+                                    "metadata": {
+                                        "country": "US",
+                                        "thumbnail": "https://cms.careers.walmart.com/content/dam/careers/technology-l2/product-management/HomePage_Health-05.jpg",
+                                        "distance": 0.9701426,
+                                        "description": "Walmart Product Managers solve big problems at scale, building tools that power millions of customer experiences and empower associates every day. It's innovation with real-world impact, shaping the future of retail.\r\n",
+                                        "areas": "Generic",
+                                        "language": "en",
+                                        "categories": "Generic",
+                                        "title": "Product Management",
+                                        "brand": "walmart",
+                                        "url": "/content/careers/us/en/home/careers-areas/technology/product-management",
+                                        "createDate": "1762492911386"
+                                    }
+                                },
+                                {
+                                    "id": "/content/careers/us/en/sams-home/careers-areas/Corporate",
+                                    "text": "Title : Corporate.Description : To create the future, we need you. At Sam's Club, you'll be a part of shaping tomorrow. Our investment in cutting-edge technology isn't just a strategy—it's a commitment to our associates and members. From frictionless technology to our dedication to convenience, here you'll play a pivotal role in transforming the shopping experience for our members.\r\n.\n Page content : Corporate To create the future, we need you. At Sam's Club, you'll be a part of shaping tomorrow. Our investment in cutting-edge technology isn't just a strategy—it's a commitment to our associates and members. From frictionless technology to our dedication to convenience, here you'll play a pivotal role in transforming the shopping experience for our members. See all Technology Jobs All See all open roles Explore opportunities Human Resources Human Resources Sales and Marketing Sales and Marketing Support Services Support Services Product Management Product Management Finance and Accounting Finance and Accounting Communications and Corporate Affairs Communications and Corporate Affairs Compliance and Ethics Compliance and Ethics Continuous Improvement Continuous Improvement Security and Asset Protection Security and Asset Protection Real Estate Real Estate Business Operations Business Operations Corporate Merchandising Corporate Merchandising Legal Legal Project and Program Management Project and Program Management Purchasing Purchasing Research and Development Research and Development Creative and Design Creative and Design Engineering Engineering Explore our benefits That’s just the beginning. We offer more perks specific
+to your work location and role. Learn about our benefits As a Sam’s Club associate, you’re eligible to enjoy a complimentary Sam’s Club Membership, which includes access to exclusive pricing, savings events and access to a wide range of products and services, both in-store and online, plus a 10% discount on fresh fruits and veggies. No cost to you Club membership Walmart field associates can earn a degree or in-demand skills certificates with no debt- Walmart covers 100% of tuition and books. Live Better U offers 60+ programs for Associates to pursue their dreams. 100% covered Live Better U Sam’s Club has invested in the next generation of talent through in-house training programs and community-based organizations that cultivate opportunities for everyone. Grow your skills Clear Pathways Financial perks Enjoy 401(k) matching and stock purchase plans. Paid time off Take a break as needed for vacations, sick leave, holidays, parental leave and more. Comprehensive health benefits Medical, dental, vision and wellness programs for you and your family. Well-being programs Access mental health resources and assistance programs for life’s challenges. Career growth opportunities Training, leadership programs, and clear paths to advance.  In Corporate, we don’t just support the business, we help lead it forward. Together, we turn bold ideas into real progress for our associates, customers, and communities. Build your career your way See all corporate roles All middle Club support From strategy to operations to tech, your work helps power what happens in our clubs. Every decision you make supports our associates and the members they serve. middle Grow Bring your ideas, stretch your skills, and shape your future. At Sam’s Club, you’ll find the tools, teammates, and trust to keep growing - in the direction you want to go. Three hubs. One mission. Endless possibilities Our hubs spark collaboration and innovation, so you’re free to energize and push boundaries from the space that serves you best. See all hubs Northwest Arkansas Sunnyvale Sunnyvale Hoboken Hoboken Inspiration in every role “I have a seat at the table. I can use my voice, and it matters.” Marketing Planning And Strategy Alexandra “Coming from an in-club associate and stepping into an internship, I’ve been able to expand my knowledge—something I’ve been really grateful to be a part of.” Software Engineer Bryan “It’s more than just the logo or the club you pass on the street—there’s real purpose behind it.” Rotational Merchant Trenton Find the role
+that’s a perfect fit ",
+                                    "score": 0.029418126,
+                                    "metadata": {
+                                        "country": "US",
+                                        "thumbnail": "https://cms.careers.walmart.com/content/dam/careers/sam's-club-tech-and-corporate/Sam's%20Corporate%20and%20Tech-16.jpg",
+                                        "distance": 0.9705819,
+                                        "description": "To create the future, we need you. At Sam's Club, you'll be a part of shaping tomorrow. Our investment in cutting-edge technology isn't just a strategy—it's a commitment to our associates and members. From frictionless technology to our dedication to convenience, here you'll play a pivotal role in transforming the shopping experience for our members.\r\n",
+                                        "areas": "Generic",
+                                        "language": "en",
+                                        "categories": "Generic",
+                                        "title": "Corporate",
+                                        "brand": "sams",
+                                        "url": "/content/careers/us/en/sams-home/careers-areas/Corporate",
+                                        "createDate": "1762492800612"
+                                    }
+                                },
+                                {
+                                    "id": "/content/careers/us/en/home/careers-areas/corporate",
+                                    "text": "Title : Corporate.Description : Your skills can shape what’s next. From merchandising to marketing, finance to strategy, corporate roles at Walmart and Sam’s Club offer the scale, tools, and support to make a real difference. Whether you’re solving challenges or driving change, your work helps people save money and live better, every day..\n Page content : Corporate Your skills can shape what’s next. From merchandising to marketing, finance to strategy, corporate roles at Walmart and Sam’s Club offer the scale, tools, and support to make a real difference. Whether you’re solving challenges or driving change, your work helps people save money and live better, every day. See all Technology Jobs All See all open roles Join our team Product Management Product Management Corporate Merchandising Corporate Merchandising Finance and Accounting Finance and Accounting Sales and Marketing Sales and Marketing Human Resources Human Resources Continuous Improvement Continuous Improvement Support Services Support Services Communication and Corporate Affairs Communication and Corporate Affairs Compliance and Ethics Compliance and Ethics Real Estate Real Estate Business Operations Business Operations Legal Legal Project and Program Management Project and Program Management Purchasing Purchasing Research and Development Research and Development Security and Asset Protection Security and Asset Protection Creative and Design Creative and Design Engineering Engineering Explore our benefits Learn more about benefits Walmart associates are eligible for a 10% discount card on all general merchandise items and fresh produce in-store and on select items at Walmart.com. Eligible after 90 days of employment. Get 10% off Discount Card Walmart field associates can earn a degree or in-demand skills certificates with no debt- Walmart covers 100% of tuition and books. Live Better U offers 60+ programs for Associates to pursue their dreams. 100% covered Live Better U Ready to grow your career? Walmart Academy offers job-specific retail training and leadership courses to help Associates reach their career goals. Grow your skills Walmart Academy Financial perks Enjoy 401(k) matching and stock purchase plans. Paid time off Take a break as needed for vacations, sick leave, holidays, parental leave and more. Comprehensive health benefits Medical, dental, vision and wellness programs for you and your family. Well-being programs Access mental health resources and assistance programs for life’s challenges. Career growth opportunities Training, leadership programs, and clear paths to advance.  At Walmart and Sam’s Club, corporate is more than a department, it’s a dynamic network of thinkers, strategists, and leaders working together to shape the future of retail. Build your career, your way See all corporate roles All middle Thrive Corporate life at Walmart and Sam’s Club isn’t confined to a desk. Whether you’re analyzing data, leading teams, managing projects, or solving business challenges, you’ll do work that pushes you to grow and gives you the space to succeed. middle Opportunity Our scale creates room for your ambitions. With opportunities across merchandising, finance, HR, strategy, legal, and beyond, you can take your career in any direction while staying connected to the mission that brings it all together. middle Purpose Everything we do supports the associates, customers, members, and communities who count on us. When you join a corporate team here, your work drives the decisions and strategies that help people save money and live better. Three hubs. One mission. Endless possibilities Our hubs spark collaboration and innovation, so you’re free to energize and push boundaries from the space that serves you best. See all hubs Northwest Arkansas Sunnyvale Sunnyvale Hoboken Hoboken Inspiration in every role &quot;We’re data geeks, and the depth we get to explore here keeps us excited every single day.&quot; Senior Manager, Food Media Insights Christopher &quot;We’re building something that’s never been done before—and you can be a part of that story.&quot; Senior Manager I, Advertising Sales Joy &quot;Walmart Connect is like a startup—with the power and scale of a Fortune 1 company.&quot; Team Lead, Hardlines Antonio Find the role that’s a perfect fit ",
+                                    "score": 0.028174603,
+                                    "metadata": {
+                                        "country": "US",
+                                        "thumbnail": "https://cms.careers.walmart.com/content/dam/careers/corporate-l2/ILC_SI_20250527_0397.jpg",
+                                        "distance": 0.9718254,
+                                        "description": "Your skills can shape what’s next. From merchandising to marketing, finance to strategy, corporate roles at Walmart and Sam’s Club offer the scale, tools, and support to make a real difference. Whether you’re solving challenges or driving change, your work helps people save money and live better, every day.",
+                                        "areas": "Generic",
+                                        "language": "en",
+                                        "categories": "Generic",
+                                        "title": "Corporate",
+                                        "brand": "walmart",
+                                        "url": "/content/careers/us/en/home/careers-areas/corporate",
+                                        "createDate": "1762492878693"
+                                    }
+                                },
+                                {
+                                    "id": "/content/careers/us/en/sams-home/careers-areas/Corporate/Sales-and-Marketing",
+                                    "text": "Title : Sales and Marketing.Description : Shape effective and attention-catching sales strategies! Join a team that works to identify new sales opportunities, maximize profits and achieve sales targets, developing innovative and powerful strategies based on industry trends to reach new business stakeholders..\n Page content : Sales & Marketing Shape effective and attention-catching sales strategies! Join a team that works to identify new sales opportunities, maximize profits and achieve sales targets, developing innovative and powerful strategies based on industry trends to reach new business stakeholders. See all open roles Sales and Marketing Grow what's next See all sales and marketing roles Sales and Marketing middle Make momentum happen Whether you're creating campaigns, supporting supplier success, or launching solutions at scale, your work helps Sam’s Club grow in ways that matter—to our members and to your career. middle Turn insight into action Sales and marketing roles at Sam’s Club are all about understanding what moves our business forward. From market trends to member feedback, you’ll help shape smart strategies that make a difference. Explore our benefits That’s just the beginning. We offer more perks specific
+to your work location and role. Learn about our benefits Sam's Club associates are eligible for a 10% discount card on most regular-priced items and fresh produce in-store and on select items at Walmart.com. Eligible after 90 days of employment. Get 10% off Discount Card Walmart field associates can earn a degree or in-demand skills certificates with no debt- Walmart covers 100% of tuition and books. Live Better U offers 60+ programs for Associates to pursue their dreams. 100% covered Live Better U Sam’s Club has invested in the next generation of talent through in-house training programs and community-based organizations that cultivate opportunities for everyone. Grow your skills Clear Pathways Financial perks Enjoy 401(k) matching and stock purchase plans. Paid time off Take a break as needed for vacations, sick leave, holidays, parental leave and more. Comprehensive health benefits Medical, dental, vision and wellness programs for you and your family. Well-being programs Access mental health resources and assistance programs for life’s challenges. Career growth opportunities Training, leadership programs, and clear paths to advance.  Your career at Sam's Club You want more than a job—you want a career where your voice matters. At Sam’s Club Tech, you’ll find it. From pharmacy to engineering, your path is yours to shape. Here, you can pivot, explore, and lead. Impact: Whether in a club or at a keyboard, you’re solving real problems for millions—because innovation starts with you. Day in the life Sales and Marketing Inspiration in every role “I have a seat at the table. I can use my voice, and it matters.” Marketing Planning And Strategy Alexandra “They’ve taught me how to use my voice.” Marketing Intern Tabari “Curiosity is encouraged here.” Merchandising Intern Giandra Roles picked for you See all Openings ",
+                                    "score": 0.028169014,
+                                    "metadata": {
+                                        "country": "US",
+                                        "thumbnail": "https://cms.careers.walmart.com/content/dam/careers/sam's-club-tech-and-corporate/Sam's%20Corporate%20and%20Tech-10.jpg",
+                                        "distance": 0.97183096,
+                                        "description": "Shape effective and attention-catching sales strategies! Join a team that works to identify new sales opportunities, maximize profits and achieve sales targets, developing innovative and powerful strategies based on industry trends to reach new business stakeholders.",
+                                        "areas": "Generic",
+                                        "language": "en",
+                                        "categories": "Generic",
+                                        "title": "Sales and Marketing",
+                                        "brand": "sams",
+                                        "url": "/content/careers/us/en/sams-home/careers-areas/Corporate/Sales-and-Marketing",
+                                        "createDate": "1762365619349"
+                                    }
+                                },
+                                {
+                                    "id": "/content/careers/us/en/home/careers-areas/students",
+                                    "text": "Title : Students.Description : We’re looking for ambitious and motivated summer interns - undergraduates, graduates, and MBAs - to join us in powering the future of retail. There’s a path for everyone to start a purpose-driven career at Walmart and Sam's Club. Here you will unlock your potential while impacting millions of people. Are you ready?.\n Page content : Students We’re looking for ambitious and motivated summer interns - undergraduates, graduates, and MBAs - to join us in powering the future of retail. There’s a path for everyone to start a purpose-driven career at Walmart and Sam's Club. Here you will unlock your potential while impacting millions of people. Are you ready? See all opportunities All Walmart careers: intern week Take a closer look into our intern program. Join our family and create a career you're proud of. Intern week Walmart careers Best place to launch See all opportunities All middle Experience This is where your career kicks off. You’ll be part of a team solving big challenges, learning from experienced leaders, and building smart solutions that reach millions. At Walmart and Sam’s Club, you’ll gain real-world experience that helps you grow with purpose and confidence and launch what’s next. middle Perks Interns at Walmart and Sam’s Club are set up to thrive. You’ll get competitive pay, access to tools and resources, mentorship from leaders, and the chance to present your work to decision-makers. We invest in your success and want you to feel supported every step of the way. middle Launch This is the beginning of something bigger. Many interns return as full-time associates, ready to lead. Whether you're here for the summer or exploring year-round opportunities, this is a place to start strong and go further Explore our benefits Learn more about benefits Walmart associates are eligible for a 10% discount card on all general merchandise items and fresh produce in-store and on select items at Walmart.com. Eligible after 90 days of employment. Get 10% off Discount Card Walmart field associates can earn a degree or in-demand skills certificates with no debt- Walmart covers 100% of tuition and books. Live Better U offers 60+ programs for Associates to pursue their dreams. 100% covered Live Better U Ready to grow your career? Walmart Academy offers job-specific retail training and leadership courses to help Associates reach their career goals. Grow your skills Walmart Academy Financial perks Enjoy 401(k) matching and stock purchase plans. Paid time off Take a break as needed for vacations, sick leave, holidays, parental leave and more. Comprehensive health benefits Medical, dental, vision and wellness programs for you and your family. Well-being programs Access mental health resources and assistance programs for life’s challenges. Career growth opportunities Training, leadership programs, and clear paths to advance.  See opportunities Development Program Big thinkers. Bigger impact All Email Undergraduate Internship Undergraduate internships Test drive your knowledge New Graduates New graduates Full-Time opportunities for new grads Graduate and MBA Internship Graduate and MBA internships Take your career further Merchandising Merchandising Help our customers get what they need at everyday low prices Supply Chain Supply Chain & Operations Maximize efficiency and effectiveness in our massive supply chain Finance Finance Analyze our finances and support big decisions Data Science and Analytics Data Science & Analytics Analyze data at a massive scale and support our infrastructure Software engineering Software Engineering Impact millions with your code Product Management Product Management Solve complex challenges with innovative products for our customers and associates Job simulator Discover Walmart: job simulations Inspiration in every role &quot;Being able to be in charge of your project and that everybody wants to see you win.&quot; Global People intern Justice Jackson &nbsp;&quot;Sam's Club and Walmart has taught me a lot about being the change you want to see.&quot; Marketing intern Tabari Davis &quot;Hearing in the company that a lot of these people started as interns, it gives us a bright future because my end goal would be to get an offer here and be able to come back.&quot; Mechandising intern Adam Moncure Roles picked for you See all Openings ",
+                                    "score": 0.027730294,
+                                    "metadata": {
+                                        "country": "US",
+                                        "thumbnail": "https://cms.careers.walmart.com/content/dam/careers/student/Student-15.png",
+                                        "distance": 0.9722697,
+                                        "description": "We’re looking for ambitious and motivated summer interns - undergraduates, graduates, and MBAs - to join us in powering the future of retail. There’s a path for everyone to start a purpose-driven career at Walmart and Sam's Club. Here you will unlock your potential while impacting millions of people. Are you ready?",
+                                        "areas": "Generic",
+                                        "language": "en",
+                                        "categories": "Generic",
+                                        "title": "Students",
+                                        "brand": "walmart",
+                                        "url": "/content/careers/us/en/home/careers-areas/students",
+                                        "createDate": "1762492901155"
+                                    }
+                                }
+                            ]
+                        },
+                        "future_roles": [],
+                        "jobs": [
+                            {
+                                "job_id": "R-2241483",
+                                "city": "SUNNYVALE",
+                                "title": "Senior Manager, Software Engineering",
+                                "jobPostingTitle": "Senior Manager, Software Engineering",
+                                "latitude": 37.381022,
+                                "longitude": -122.035888,
+                                "state": "CA",
+                                "country": "US",
+                                "skills": [
+                                    "Software Engineering",
+                                    "Machine Learning",
+                                    "Technical Leadership",
+                                    "Systems Architecture",
+                                    "Agile Methodology"
+                                ],
+                                "shifts": [
+                                    "Weekday Day",
+                                    "Weekend Day"
+                                ],
+                                "categories": [
+                                    "Software Engineering and Architecture"
+                                ],
+                                "brand": "Walmart",
+                                "employmentTypes": [
+                                    "Full time"
+                                ],
+                                "distanceInMiles": null,
+                                "minPay": 143000,
+                                "maxPay": 286000,
+                                "areas": [
+                                    "Technology"
+                                ],
+                                "population": "WALMART_EXT_CAMPUS_US",
+                                "storeNumber": "4397",
+                                "bannerName": "Home Office",
+                                "postalCode": "94086-4834",
+                                "shiftTime": [
+                                    "Shift may start between 3:00am - 11:00am",
+                                    "Shift may start between 3:00am - 11:00am"
+                                ],
+                                "additionalLocationCities": [],
+                                "payFrequency": "Annual",
+                                "payRange": [
+                                    {
+                                        "location": "Sunnyvale, California",
+                                        "code": "US-04397",
+                                        "min": "143000",
+                                        "max": "286000"
+                                    }
+                                ]
+                            },
+                            {
+                                "job_id": "R-2318899",
+                                "city": "SUNNYVALE",
+                                "title": "Staff, Software Engineer",
+                                "jobPostingTitle": "Staff, Software Engineer",
+                                "latitude": 37.4131606,
+                                "longitude": -122.0131752,
+                                "state": "CA",
+                                "country": "US",
+                                "skills": [
+                                    "Java (Programming Language)",
+                                    "Software Engineering",
+                                    "Web Services",
+                                    "Service-Oriented Architecture",
+                                    "Spring Framework"
+                                ],
+                                "shifts": [
+                                    "Weekday Day",
+                                    "Weekend Day"
+                                ],
+                                "categories": [
+                                    "Software Engineering and Architecture"
+                                ],
+                                "brand": "Walmart",
+                                "employmentTypes": [
+                                    "Full time"
+                                ],
+                                "distanceInMiles": null,
+                                "minPay": 143000,
+                                "maxPay": 286000,
+                                "areas": [
+                                    "Technology"
+                                ],
+                                "population": "WALMART_EXT_CAMPUS_US",
+                                "storeNumber": "11657",
+                                "bannerName": "Home Office",
+                                "postalCode": "94089-1114",
+                                "shiftTime": [
+                                    "Shift may start between 3:00am - 11:00am",
+                                    "Shift may start between 3:00am - 11:00am"
+                                ],
+                                "additionalLocationCities": [],
+                                "payFrequency": "Annual",
+                                "payRange": [
+                                    {
+                                        "location": "SUNNYVALE, CA",
+                                        "code": "US-11657",
+                                        "min": "143000",
+                                        "max": "286000"
+                                    }
+                                ]
+                            },
+                            {
+                                "job_id": "R-2352236",
+                                "city": "BENTONVILLE",
+                                "title": "Senior Manager, Software Engineering",
+                                "jobPostingTitle": "Senior Manager, Software Engineering",
+                                "latitude": 36.364979,
+                                "longitude": -94.21579,
+                                "state": "AR",
+                                "country": "US",
+                                "skills": [
+                                    "Software Engineering",
+                                    "Leadership",
+                                    "Management",
+                                    "Software Development",
+                                    "Agile Methodology"
+                                ],
+                                "shifts": [
+                                    "Weekday Day",
+                                    "Weekend Day"
+                                ],
+                                "categories": [
+                                    "Software Engineering and Architecture"
+                                ],
+                                "brand": "Walmart",
+                                "employmentTypes": [
+                                    "Full time"
+                                ],
+                                "distanceInMiles": null,
+                                "minPay": 110000,
+                                "maxPay": 220000,
+                                "areas": [
+                                    "Technology"
+                                ],
+                                "population": "WALMART_EXT_CAMPUS_US",
+                                "storeNumber": "9418",
+                                "bannerName": "Other",
+                                "postalCode": "72716-0000",
+                                "shiftTime": [
+                                    "Shift may start between 3:00am - 11:00am",
+                                    "Shift may start between 3:00am - 11:00am"
+                                ],
+                                "additionalLocationCities": [],
+                                "payFrequency": "Annual",
+                                "payRange": [
+                                    {
+                                        "location": "Bentonville, Arkansas",
+                                        "code": "US-09418",
+                                        "min": "110000",
+                                        "max": "220000"
+                                    }
+                                ]
+                            },
+                            {
+                                "job_id": "R-2311880",
+                                "city": "SUNNYVALE",
+                                "title": "Principal, Software Engineer",
+                                "jobPostingTitle": "Principal, Software Engineer",
+                                "latitude": 37.4131606,
+                                "longitude": -122.0131752,
+                                "state": "CA",
+                                "country": "US",
+                                "skills": [
+                                    "Network Architecture",
+                                    "Data Center Design",
+                                    "Network Engineering",
+                                    "Computer Network Operations",
+                                    "Network Automation"
+                                ],
+                                "shifts": [
+                                    "Weekday Day",
+                                    "Weekend Day"
+                                ],
+                                "categories": [
+                                    "Software Engineering and Architecture"
+                                ],
+                                "brand": "Walmart",
+                                "employmentTypes": [
+                                    "Full time"
+                                ],
+                                "distanceInMiles": null,
+                                "minPay": 143000,
+                                "maxPay": 286000,
+                                "areas": [
+                                    "Technology"
+                                ],
+                                "population": "WALMART_EXT_CAMPUS_US",
+                                "storeNumber": "11657",
+                                "bannerName": "Home Office",
+                                "postalCode": "94089-1114",
+                                "shiftTime": [
+                                    "Shift may start between 3:00am - 11:00am",
+                                    "Shift may start between 3:00am - 11:00am"
+                                ],
+                                "additionalLocationCities": [],
+                                "payFrequency": "Annual",
+                                "payRange": [
+                                    {
+                                        "location": "SUNNYVALE, CA",
+                                        "code": "US-11657",
+                                        "min": "143000",
+                                        "max": "286000"
+                                    }
+                                ]
+                            },
+                            {
+                                "job_id": "R-2358342",
+                                "city": "HOBOKEN",
+                                "title": "Software Engineer III",
+                                "jobPostingTitle": "Software Engineer III",
+                                "latitude": 40.738768,
+                                "longitude": -74.027768,
+                                "state": "NJ",
+                                "country": "US",
+                                "skills": [
+                                    "Software Development",
+                                    "Software Engineering",
+                                    "Object Oriented Programming And Systems",
+                                    "Data Structures",
+                                    "Algorithms"
+                                ],
+                                "shifts": [
+                                    "Weekday Day",
+                                    "Weekend Day"
+                                ],
+                                "categories": [
+                                    "Software Engineering and Architecture"
+                                ],
+                                "brand": "Walmart",
+                                "employmentTypes": [
+                                    "Full time"
+                                ],
+                                "distanceInMiles": null,
+                                "minPay": 108000,
+                                "maxPay": 216000,
+                                "areas": [
+                                    "Technology"
+                                ],
+                                "population": "WALMART_EXT_CAMPUS_US",
+                                "storeNumber": "10279",
+                                "bannerName": "walmart.com",
+                                "postalCode": "07030-5989",
+                                "shiftTime": [
+                                    "Shift may start between 3:00am - 11:00am",
+                                    "Shift may start between 3:00am - 11:00am"
+                                ],
+                                "additionalLocationCities": [],
+                                "payFrequency": "Annual",
+                                "payRange": [
+                                    {
+                                        "location": "HOBOKEN, NJ",
+                                        "code": "US-10279",
+                                        "min": "0",
+                                        "max": "0"
+                                    }
+                                ]
+                            },
+                            {
+                                "job_id": "R-2337244",
+                                "city": "SUNNYVALE",
+                                "title": "Principal Software Engineer, Backend",
+                                "jobPostingTitle": "Principal Software Engineer, Backend",
+                                "latitude": 37.4140696,
+                                "longitude": -122.0128775,
+                                "state": "CA",
+                                "country": "US",
+                                "skills": [
+                                    "Software Engineering",
+                                    "Systems Architecture",
+                                    "Software Development",
+                                    "Mentorship",
+                                    "Leadership"
+                                ],
+                                "shifts": [
+                                    "Weekday Day",
+                                    "Weekend Day"
+                                ],
+                                "categories": [
+                                    "Software Engineering and Architecture"
+                                ],
+                                "brand": "Walmart",
+                                "employmentTypes": [
+                                    "Full time"
+                                ],
+                                "distanceInMiles": null,
+                                "minPay": 143000,
+                                "maxPay": 286000,
+                                "areas": [
+                                    "Technology"
+                                ],
+                                "population": "WALMART_EXT_CAMPUS_US",
+                                "storeNumber": "11656",
+                                "bannerName": "Home Office",
+                                "postalCode": "94089-1114",
+                                "shiftTime": [
+                                    "Shift may start between 3:00am - 11:00am",
+                                    "Shift may start between 3:00am - 11:00am"
+                                ],
+                                "additionalLocationCities": [],
+                                "payFrequency": "Annual",
+                                "payRange": [
+                                    {
+                                        "location": "Sunnyvale, California",
+                                        "code": "US-11656",
+                                        "min": "143000",
+                                        "max": "286000"
+                                    }
+                                ]
+                            },
+                            {
+                                "job_id": "R-2358352",
+                                "city": "HOBOKEN",
+                                "title": "Senior Software Engineer",
+                                "jobPostingTitle": "Senior Software Engineer",
+                                "latitude": 40.738768,
+                                "longitude": -74.027768,
+                                "state": "NJ",
+                                "country": "US",
+                                "skills": [
+                                    "Java (Programming Language)",
+                                    "Software Engineering",
+                                    "RESTful API",
+                                    "Continuous Integration",
+                                    "Continuous Delivery"
+                                ],
+                                "shifts": [
+                                    "Weekday Day",
+                                    "Weekend Day"
+                                ],
+                                "categories": [
+                                    "Software Engineering and Architecture"
+                                ],
+                                "brand": "Walmart",
+                                "employmentTypes": [
+                                    "Full time"
+                                ],
+                                "distanceInMiles": null,
+                                "minPay": 108000,
+                                "maxPay": 216000,
+                                "areas": [
+                                    "Technology"
+                                ],
+                                "population": "WALMART_EXT_CAMPUS_US",
+                                "storeNumber": "10279",
+                                "bannerName": "walmart.com",
+                                "postalCode": "07030-5989",
+                                "shiftTime": [
+                                    "Shift may start between 3:00am - 11:00am",
+                                    "Shift may start between 3:00am - 11:00am"
+                                ],
+                                "additionalLocationCities": [],
+                                "payFrequency": "Annual",
+                                "payRange": [
+                                    {
+                                        "location": "HOBOKEN, NJ",
+                                        "code": "US-10279",
+                                        "min": "0",
+                                        "max": "0"
+                                    }
+                                ]
+                            },
+                            {
+                                "job_id": "R-2331738",
+                                "city": "SUNNYVALE",
+                                "title": "Director, Software Engineering",
+                                "jobPostingTitle": "Director, Software Engineering",
+                                "latitude": 37.381022,
+                                "longitude": -122.035888,
+                                "state": "CA",
+                                "country": "US",
+                                "skills": [
+                                    "Software Engineering",
+                                    "Microservices",
+                                    "Leadership",
+                                    "Talent Development",
+                                    "Systems Design"
+                                ],
+                                "shifts": [
+                                    "Weekday Day",
+                                    "Weekend Day"
+                                ],
+                                "categories": [
+                                    "Software Engineering and Architecture"
+                                ],
+                                "brand": "Walmart",
+                                "employmentTypes": [
+                                    "Full time"
+                                ],
+                                "distanceInMiles": null,
+                                "minPay": 169000,
+                                "maxPay": 338000,
+                                "areas": [
+                                    "Technology"
+                                ],
+                                "population": "WALMART_EXT_CAMPUS_US",
+                                "storeNumber": "4397",
+                                "bannerName": "Home Office",
+                                "postalCode": "94086-4834",
+                                "shiftTime": [
+                                    "Shift may start between 3:00am - 11:00am",
+                                    "Shift may start between 3:00am - 11:00am"
+                                ],
+                                "additionalLocationCities": [],
+                                "payFrequency": "Annual",
+                                "payRange": [
+                                    {
+                                        "location": "Sunnyvale, California",
+                                        "code": "US-04397",
+                                        "min": "169000",
+                                        "max": "338000"
+                                    }
+                                ]
+                            },
+                            {
+                                "job_id": "R-2328529",
+                                "city": "BENTONVILLE",
+                                "title": "(USA) Staff, Software Engineer",
+                                "jobPostingTitle": "(USA) Staff, Software Engineer",
+                                "latitude": 36.345398,
+                                "longitude": -94.196015,
+                                "state": "AR",
+                                "country": "US",
+                                "skills": [
+                                    "Software Development Life Cycle",
+                                    "Cloud-Native Architecture",
+                                    "Java (Programming Language)",
+                                    "API Design",
+                                    "Web Services"
+                                ],
+                                "shifts": [
+                                    "Weekday Day",
+                                    "Weekend Day"
+                                ],
+                                "categories": [
+                                    "Software Engineering and Architecture"
+                                ],
+                                "brand": "Walmart",
+                                "employmentTypes": [
+                                    "Full time"
+                                ],
+                                "distanceInMiles": null,
+                                "minPay": 110000,
+                                "maxPay": 220000,
+                                "areas": [
+                                    "Technology"
+                                ],
+                                "population": "WALMART_EXT_CAMPUS_US",
+                                "storeNumber": "10735",
+                                "bannerName": "Home Office",
+                                "postalCode": "72716-3724",
+                                "shiftTime": [
+                                    "Shift may start between 3:00am - 11:00am",
+                                    "Shift may start between 3:00am - 11:00am"
+                                ],
+                                "additionalLocationCities": [],
+                                "payFrequency": "Annual",
+                                "payRange": [
+                                    {
+                                        "location": "Bentonville, Arkansas",
+                                        "code": "US-10735",
+                                        "min": "110000",
+                                        "max": "220000"
+                                    }
+                                ]
+                            },
+                            {
+                                "job_id": "R-2312940",
+                                "city": "SUNNYVALE",
+                                "title": "Senior Software Engineer",
+                                "jobPostingTitle": "Senior Software Engineer",
+                                "latitude": 37.381022,
+                                "longitude": -122.035888,
+                                "state": "CA",
+                                "country": "US",
+                                "skills": [
+                                    "Software Engineering",
+                                    "Software Development",
+                                    "Java (Programming Language)",
+                                    "Python (Programming Language)",
+                                    "JavaScript (Programming Language)"
+                                ],
+                                "shifts": [],
+                                "categories": [
+                                    "Software Engineering and Architecture"
+                                ],
+                                "brand": "Walmart",
+                                "employmentTypes": [
+                                    "Full time"
+                                ],
+                                "distanceInMiles": null,
+                                "minPay": 117000,
+                                "maxPay": 234000,
+                                "areas": [
+                                    "Technology"
+                                ],
+                                "population": "WALMART_EXT_CAMPUS_US",
+                                "storeNumber": "4397",
+                                "bannerName": "Home Office",
+                                "postalCode": "94086-4834",
+                                "shiftTime": [],
+                                "additionalLocationCities": [],
+                                "payFrequency": "Annual",
+                                "payRange": [
+                                    {
+                                        "location": "SUNNYVALE, CA",
+                                        "code": "US-04397",
+                                        "min": "117000",
+                                        "max": "234000"
+                                    }
+                                ]
+                            }
+                        ],
+                        "searchResults": null,
+                        "store_jobs_aggregation_result": [
+                            {
+                                "storeNumber": 9050,
+                                "count": 59,
+                                "geoLocation": {
+                                    "lat": 36.36276297736913,
+                                    "lon": -94.18254001066089
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 11656,
+                                "count": 55,
+                                "geoLocation": {
+                                    "lat": 37.41406959481537,
+                                    "lon": -122.01287755742669
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 10735,
+                                "count": 50,
+                                "geoLocation": {
+                                    "lat": 36.34539797902107,
+                                    "lon": -94.19601500965655
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 11657,
+                                "count": 48,
+                                "geoLocation": {
+                                    "lat": 37.41316057741642,
+                                    "lon": -122.01317528262734
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 11075,
+                                "count": 32,
+                                "geoLocation": {
+                                    "lat": 47.583909281529486,
+                                    "lon": -122.09904436022043
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 9430,
+                                "count": 31,
+                                "geoLocation": {
+                                    "lat": 36.364955976605415,
+                                    "lon": -94.21457606367767
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 11349,
+                                "count": 29,
+                                "geoLocation": {
+                                    "lat": 37.41491796914488,
+                                    "lon": -122.00966686941683
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 4397,
+                                "count": 25,
+                                "geoLocation": {
+                                    "lat": 37.381021971814334,
+                                    "lon": -122.03588806092739
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 8479,
+                                "count": 24,
+                                "geoLocation": {
+                                    "lat": 37.38216396421194,
+                                    "lon": -122.03633205033839
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 11571,
+                                "count": 23,
+                                "geoLocation": {
+                                    "lat": 32.95089696999639,
+                                    "lon": -96.8256370536983
+                                },
+                                "brand": "Vizio"
+                            },
+                            {
+                                "storeNumber": 9930,
+                                "count": 18,
+                                "geoLocation": {
+                                    "lat": 36.34592297952622,
+                                    "lon": -94.18621002696455
+                                },
+                                "brand": "Sam's Club"
+                            },
+                            {
+                                "storeNumber": 30012,
+                                "count": 18,
+                                "geoLocation": {
+                                    "lat": 36.372355981729925,
+                                    "lon": -94.21021403744817
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 11807,
+                                "count": 13,
+                                "geoLocation": {
+                                    "lat": 37.40286868996918,
+                                    "lon": -122.03613155521452
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 4396,
+                                "count": 12,
+                                "geoLocation": {
+                                    "lat": 37.381582972593606,
+                                    "lon": -122.03788605518639
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 11581,
+                                "count": 9,
+                                "geoLocation": {
+                                    "lat": 39.71745996270329,
+                                    "lon": -104.94659305550158
+                                },
+                                "brand": "Vizio"
+                            },
+                            {
+                                "storeNumber": 7003,
+                                "count": 7,
+                                "geoLocation": {
+                                    "lat": 37.38145099952817,
+                                    "lon": -122.03695306554437
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 10467,
+                                "count": 7,
+                                "geoLocation": {
+                                    "lat": 36.340530985035,
+                                    "lon": -94.20023504644632
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 10424,
+                                "count": 5,
+                                "geoLocation": {
+                                    "lat": 36.35872398968786,
+                                    "lon": -94.18051502667367
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 7759,
+                                "count": 4,
+                                "geoLocation": {
+                                    "lat": 38.94555998034775,
+                                    "lon": -77.31600807979703
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 9401,
+                                "count": 4,
+                                "geoLocation": {
+                                    "lat": 36.36532796546817,
+                                    "lon": -94.21766001731157
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 10866,
+                                "count": 3,
+                                "geoLocation": {
+                                    "lat": 36.36276297736913,
+                                    "lon": -94.18254001066089
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 11663,
+                                "count": 3,
+                                "geoLocation": {
+                                    "lat": 47.61403899639845,
+                                    "lon": -122.1948890760541
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 11789,
+                                "count": 3,
+                                "geoLocation": {
+                                    "lat": 37.403499679639935,
+                                    "lon": -122.0358460675925
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 9413,
+                                "count": 2,
+                                "geoLocation": {
+                                    "lat": 36.36315596289933,
+                                    "lon": -94.19328301213682
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 10279,
+                                "count": 2,
+                                "geoLocation": {
+                                    "lat": 40.73876795824617,
+                                    "lon": -74.0277680195868
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 11573,
+                                "count": 2,
+                                "geoLocation": {
+                                    "lat": 47.621692973189056,
+                                    "lon": -122.36127002164721
+                                },
+                                "brand": "Vizio"
+                            },
+                            {
+                                "storeNumber": 16204,
+                                "count": 2,
+                                "geoLocation": {
+                                    "lat": 37.411096575669944,
+                                    "lon": -122.01817626133561
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 9104,
+                                "count": 1,
+                                "geoLocation": {
+                                    "lat": 36.345039987936616,
+                                    "lon": -94.20063100755215
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 9418,
+                                "count": 1,
+                                "geoLocation": {
+                                    "lat": 36.36497898492962,
+                                    "lon": -94.215790014714
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 10710,
+                                "count": 1,
+                                "geoLocation": {
+                                    "lat": 38.95041699986905,
+                                    "lon": -77.38919500261545
+                                },
+                                "brand": "Walmart"
+                            },
+                            {
+                                "storeNumber": 11570,
+                                "count": 1,
+                                "geoLocation": {
+                                    "lat": 33.634562962688506,
+                                    "lon": -117.73610006086528
+                                },
+                                "brand": "Vizio"
+                            },
+                            {
+                                "storeNumber": 30094,
+                                "count": 1,
+                                "geoLocation": {
+                                    "lat": 36.36355498339981,
+                                    "lon": -94.19726005755365
+                                },
+                                "brand": "Walmart"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "ai_message": {
+                "content": "I found 495 jobs, 0 future jobs.\nI also found 34 related content results.\n\nLet me know if you have any further questions about the job or the content, or if you'd like me to refine the search further.",
+                "role": "assistant"
+            }
+        }
+    }
+}

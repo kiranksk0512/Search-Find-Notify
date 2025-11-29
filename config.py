@@ -11,6 +11,7 @@ COMPANY_VERSIONING = {
     "microsoft": False,
     "intuit": False,
     "cisco": False,
+    "walmart": False,
     # Add more companies as needed
 }
 
@@ -20,6 +21,7 @@ COMPANY_EMAIL_NOTIFICATIONS = {
     "meta": True,
     "intuit": True,
     "cisco": True,
+    "walmart": True,
 }
 
 # Backup retention policy (in days)
