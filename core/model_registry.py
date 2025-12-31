@@ -17,6 +17,7 @@ from models.nutanix_job import NutanixJob
 from models.intuit_job import IntuitJob
 from models.cisco_job import CiscoJob
 from models.walmart_job import WalmartJob
+from models.waymo_job import WaymoJob
 
 REGISTRY: Dict[str, Type[BaseJob]] = {
     MetaJob.COMPANY_KEY: MetaJob,
@@ -36,6 +37,7 @@ REGISTRY: Dict[str, Type[BaseJob]] = {
     IntuitJob.COMPANY_KEY: IntuitJob,
     CiscoJob.COMPANY_KEY: CiscoJob,
     WalmartJob.COMPANY_KEY: WalmartJob,
+    WaymoJob.COMPANY_KEY: WaymoJob,
 }
 
 def get_model_cls(company: str) -> Type[BaseJob]:
