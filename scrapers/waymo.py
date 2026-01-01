@@ -11,6 +11,7 @@ from typing import Dict, List, Optional, Tuple
 import aiohttp
 
 from bs4 import BeautifulSoup
+from bs4 import FeatureNotFound
 
 from core.logger import get_company_logger
 from core.context import get_company
@@ -99,10 +100,14 @@ def _unwrap_turbo_stream_template(html: str) -> str:
     Many HTML parsers treat <template> contents specially; unwrap to ensure we can CSS-select
     the job cards reliably.
     """
-    soup = BeautifulSoup(html or "", "lxml")
+    raw = html or ""
+    try:
+        soup = BeautifulSoup(raw, "lxml")
+    except FeatureNotFound:
+        soup = BeautifulSoup(raw, "html.parser")
     templates = soup.find_all("template")
     if not templates:
-        return html or ""
+        return raw
     return "\n".join(t.decode_contents() for t in templates)
 
 
@@ -142,7 +147,10 @@ async def _get_text_with_status(
 
 def _parse_jobs_from_turbo_stream(html: str) -> List[WaymoJob]:
     inner = _unwrap_turbo_stream_template(html)
-    soup = BeautifulSoup(inner, "lxml")
+    try:
+        soup = BeautifulSoup(inner, "lxml")
+    except FeatureNotFound:
+        soup = BeautifulSoup(inner, "html.parser")
 
     jobs: List[WaymoJob] = []
     for article in soup.select("article.job-search-results-card-col"):
@@ -187,7 +195,10 @@ def _parse_jobs_from_turbo_stream(html: str) -> List[WaymoJob]:
 
 def _extract_next_url(html: str) -> Optional[str]:
     inner = _unwrap_turbo_stream_template(html)
-    soup = BeautifulSoup(inner, "lxml")
+    try:
+        soup = BeautifulSoup(inner, "lxml")
+    except FeatureNotFound:
+        soup = BeautifulSoup(inner, "html.parser")
     a = soup.select_one("nav.pagination a[rel='next']")
     if not a:
         # Some pages use "Next" link at bottom.
